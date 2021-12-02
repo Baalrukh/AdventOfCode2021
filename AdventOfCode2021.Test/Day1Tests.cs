@@ -3,7 +3,7 @@
 namespace AdventOfCode2021.Test
 {
     [TestFixture]
-    public class Tests
+    public class Day1Tests
     {
          private static readonly string[] _sampleLines = new[]
             {
