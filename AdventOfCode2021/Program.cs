@@ -8,13 +8,20 @@ namespace AdventOfCode2021
     {
         public static void Main(string[] args)
         {
+            const int currentDay = 2;
+
             var stopwatch = Stopwatch.StartNew();
-            var lines = File.ReadAllLines("Input/day2.txt");
-            var result = Day2.Execute(lines);
+            var lines = File.ReadAllLines($"Input/day{currentDay}.txt");
+
+            var referenceType = typeof(Day1);
+            var exerciseType = referenceType.Assembly.GetType($"{referenceType.Namespace}.Day{currentDay}");
+            var exercise = (Exercise)Activator.CreateInstance(exerciseType);
+
+            var result = exercise.Execute(lines);
             Console.WriteLine($"Executed in {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Result: {result}");
             stopwatch.Restart();
-            var advancedResult = Day2.ExecuteAdvanced(lines);
+            var advancedResult = exercise.ExecuteAdvanced(lines);
             Console.WriteLine($"Advanced executed in {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Result: {advancedResult}");
         }

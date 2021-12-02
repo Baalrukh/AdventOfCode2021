@@ -40,6 +40,7 @@
     <ItemGroup>
         <Compile Include="Day1.cs" />
         <Compile Include="Day2.cs" />
+        <Compile Include="Exercise.cs" />
         <Compile Include="IntVector2.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

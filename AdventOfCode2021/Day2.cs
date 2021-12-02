@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace AdventOfCode2021
 {
-    public static class Day2
+    public class Day2 : Exercise
     {
         private delegate IntVector2 PositionCommand(IntVector2 state, int value);
         private delegate SubmarineState SubmarineCommand(SubmarineState state, int value);
@@ -22,7 +22,7 @@ namespace AdventOfCode2021
             {"up", (state, value) => state.Aim(-value)},
         };
 
-        public static int Execute(string[] lines)
+        public int Execute(string[] lines)
         {
             var finalPosition = GetFinalPosition(lines);
             return finalPosition.X * finalPosition.Y;
@@ -40,7 +40,7 @@ namespace AdventOfCode2021
             return _positionCommands[tokens[0]](pos, amount);
         }
 
-        public static int ExecuteAdvanced(string[] lines)
+        public int ExecuteAdvanced(string[] lines)
         {
             var finalPosition = GetFinalPositionAdvanced(lines);
             return finalPosition.X * finalPosition.Y;
