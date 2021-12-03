@@ -2,7 +2,7 @@ namespace AdventOfCode2021
 {
     public interface Exercise
     {
-        int Execute(string[] lines);
-        int ExecuteAdvanced(string[] lines);
+        int ExecutePart1(string[] lines);
+        int ExecutePart2(string[] lines);
     }
 }

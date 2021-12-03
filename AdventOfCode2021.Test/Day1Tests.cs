@@ -22,13 +22,13 @@ namespace AdventOfCode2021.Test
         [Test]
         public void TestBaseSample()
         {
-            Assert.AreEqual(7, new Day1().Execute(_sampleLines));
+            Assert.AreEqual(7, new Day1().ExecutePart1(_sampleLines));
         }
 
         [Test]
         public void TestAdvancedSample()
         {
-            Assert.AreEqual(5, new Day1().ExecuteAdvanced(_sampleLines));
+            Assert.AreEqual(5, new Day1().ExecutePart2(_sampleLines));
         }
     }
 }

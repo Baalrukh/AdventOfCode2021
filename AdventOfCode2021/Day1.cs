@@ -4,14 +4,14 @@ namespace AdventOfCode2021
 {
     public class Day1 : Exercise
     {
-        public int Execute(string[] lines)
+        public int ExecutePart1(string[] lines)
         {
             var depths = lines.Select(int.Parse).ToList();
 
             return Enumerable.Range(1, lines.Length - 1).Count(i => depths[i] > depths[i - 1]);
         }
 
-        public int ExecuteAdvanced(string[] lines)
+        public int ExecutePart2(string[] lines)
         {
             var depths = lines.Select(int.Parse).ToList();
 
