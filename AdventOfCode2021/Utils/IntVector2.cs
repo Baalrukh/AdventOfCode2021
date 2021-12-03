@@ -1,4 +1,4 @@
-namespace AdventOfCode2021
+namespace AdventOfCode2021.Utils
 {
     public struct IntVector2
     {

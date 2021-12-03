@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021
 {

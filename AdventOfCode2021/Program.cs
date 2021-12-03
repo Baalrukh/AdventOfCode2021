@@ -8,7 +8,7 @@ namespace AdventOfCode2021
     {
         public static void Main(string[] args)
         {
-            const int currentDay = 2;
+            const int currentDay = 3;
 
             var stopwatch = Stopwatch.StartNew();
             var lines = File.ReadAllLines($"Input/day{currentDay}.txt");

@@ -1,3 +1,4 @@
+using AdventOfCode2021.Utils;
 using NUnit.Framework;
 
 namespace AdventOfCode2021.Test
