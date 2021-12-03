@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace AdventOfCode2021
 {
@@ -8,12 +9,12 @@ namespace AdventOfCode2021
     {
         public static void Main(string[] args)
         {
-            const int currentDay = 3;
+            var referenceType = typeof(Day1);
+            int currentDay = FindLastDay(referenceType);
 
             var stopwatch = Stopwatch.StartNew();
             var lines = File.ReadAllLines($"Input/day{currentDay}.txt");
 
-            var referenceType = typeof(Day1);
             var exerciseType = referenceType.Assembly.GetType($"{referenceType.Namespace}.Day{currentDay}");
             var exercise = (Exercise)Activator.CreateInstance(exerciseType);
 
@@ -24,6 +25,11 @@ namespace AdventOfCode2021
             var advancedResult = exercise.ExecuteAdvanced(lines);
             Console.WriteLine($"Advanced executed in {stopwatch.ElapsedMilliseconds}ms");
             Console.WriteLine($"Result: {advancedResult}");
+        }
+
+        private static int FindLastDay(Type referenceType)
+        {
+            return Enumerable.Range(1, 24).Last(i => referenceType.Assembly.GetType($"{referenceType.Namespace}.Day{i}") != null);
         }
     }
 }

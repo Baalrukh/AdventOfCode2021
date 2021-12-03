@@ -26,9 +26,15 @@ namespace AdventOfCode2021.Test
         }
 
         [Test]
+        public void TestParseValues()
+        {
+            CollectionAssert.AreEqual(new [] {4, 30}, Day3.ParseValues(new [] {"00100", "11110"}));
+        }
+
+        [Test]
         public void TestGetGammaRate()
         {
-            Assert.AreEqual(22, Day3.GetGammaRate(_sampleLines));
+            Assert.AreEqual(22, Day3.GetGammaRate(Day3.ParseValues(_sampleLines), 5));
         }
 
         [Test]
@@ -40,7 +46,7 @@ namespace AdventOfCode2021.Test
         [Test]
         public void TestAdvancedSample()
         {
-            Assert.AreEqual(new IntVector2(15, 60), Day2.GetFinalPositionAdvanced(_sampleLines));
+            Assert.AreEqual((23, 10), Day3.GetOxygenAndCO2Ratings(_sampleLines));
         }
     }
 }
