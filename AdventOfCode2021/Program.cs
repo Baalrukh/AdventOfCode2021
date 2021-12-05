@@ -12,6 +12,8 @@ namespace AdventOfCode2021
             var referenceType = typeof(Day1);
             int currentDay = FindLastDay(referenceType);
 
+            Console.WriteLine("Running Day" + currentDay);
+            
             var stopwatch = Stopwatch.StartNew();
             var lines = File.ReadAllLines($"Input/day{currentDay}.txt");
 

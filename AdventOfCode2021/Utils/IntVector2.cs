@@ -39,6 +39,11 @@ namespace AdventOfCode2021.Utils
             return new IntVector2(a.X + b.X, a.Y + b.Y);
         }
 
+        public static IntVector2 operator -(IntVector2 a, IntVector2 b)
+        {
+            return new IntVector2(a.X - b.X, a.Y - b.Y);
+        }
+
         public static IntVector2 operator *(IntVector2 a, int amount)
         {
             return new IntVector2(a.X * amount, a.Y * amount);
@@ -47,6 +52,20 @@ namespace AdventOfCode2021.Utils
         public static IntVector2 operator *(int amount, IntVector2 a)
         {
             return new IntVector2(a.X * amount, a.Y * amount);
+        }
+ 
+        public static IntVector2 operator /(IntVector2 a, int amount)
+        {
+            return new IntVector2(a.X / amount, a.Y / amount);
+        }
+ 
+        public static bool operator ==(IntVector2 a, IntVector2 b)
+        {
+            return (a.X == b.X) && (a.Y == b.Y);
+        }
+
+        public static bool operator !=(IntVector2 a, IntVector2 b) {
+            return (a.X != b.X) || (a.Y != b.Y);
         }
     }
 }
