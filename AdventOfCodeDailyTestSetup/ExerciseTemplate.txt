@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace AdventOfCode2021 {
+    public class Day{day} : Exercise {
+        public int ExecutePart1(string[] lines) {
+            return -1;
+        }
+
+        public int ExecutePart2(string[] lines) {
+            return -2;
+        }
+    }
+}

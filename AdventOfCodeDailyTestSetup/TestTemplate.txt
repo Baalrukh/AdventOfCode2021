@@ -1,0 +1,20 @@
+﻿using NUnit.Framework;
+
+namespace AdventOfCode2021.Test {
+    [TestFixture]
+    public class Day{day}Tests {
+        private static readonly string[] _sampleLines = new[] {
+            ""
+        };
+
+        [Test]
+        public void TestPart1() {
+            new Day{day}().ExecutePart1(_sampleLines);
+        }
+
+        [Test]
+        public void TestBingoPart2() {
+            new Day{day}().ExecutePart2(_sampleLines);
+        }
+    }
+}
