@@ -13,7 +13,7 @@ namespace AdventOfCode2021.Test {
         }
 
         [Test]
-        public void TestBingoPart2() {
+        public void TestPart2() {
             new Day{day}().ExecutePart2(_sampleLines);
         }
     }
