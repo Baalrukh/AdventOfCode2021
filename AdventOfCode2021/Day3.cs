@@ -5,7 +5,7 @@ using System.Linq;
 namespace AdventOfCode2021 {
     public class Day3 : Exercise
     {
-        public int ExecutePart1(string[] lines)
+        public long ExecutePart1(string[] lines)
         {
             var values = ParseValues(lines);
             var bitCount = lines[0].Length;
@@ -20,7 +20,7 @@ namespace AdventOfCode2021 {
             return values;
         }
 
-        public int ExecutePart2(string[] lines)
+        public long ExecutePart2(string[] lines)
         {
             var (oxy, co2) = GetOxygenAndCO2Ratings(lines);
             return oxy * co2;

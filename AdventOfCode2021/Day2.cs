@@ -23,7 +23,7 @@ namespace AdventOfCode2021
             {"up", (state, value) => state.Aim(-value)},
         };
 
-        public int ExecutePart1(string[] lines)
+        public long ExecutePart1(string[] lines)
         {
             var finalPosition = GetFinalPosition(lines);
             return finalPosition.X * finalPosition.Y;
@@ -41,7 +41,7 @@ namespace AdventOfCode2021
             return _positionCommands[tokens[0]](pos, amount);
         }
 
-        public int ExecutePart2(string[] lines)
+        public long ExecutePart2(string[] lines)
         {
             var finalPosition = GetFinalPositionAdvanced(lines);
             return finalPosition.X * finalPosition.Y;

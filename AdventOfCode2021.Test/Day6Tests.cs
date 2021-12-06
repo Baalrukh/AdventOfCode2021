@@ -7,37 +7,33 @@ namespace AdventOfCode2021.Test {
             "3,4,3,1,2"
         };
 
-        private Day6.FishEcoSystem _ecoSystem = new Day6.FishEcoSystem(2, 7);
-
         [Test]
-        public void TestGetGetFishCount_BeforeDuplication()
+        public void TestFishEcoSystem2_EvolveReducesTimeByOne()
         {
-            Assert.AreEqual(1, _ecoSystem.GetFishCount(5, 3));
+            var ecoSystem = new Day6.FishEcoSystem(2, 7, new long[] {0, 1, 2, 3, 4, 5, 6});
+            ecoSystem.Evolve(1);
+
+            CollectionAssert.AreEqual(new[] {1, 2, 3, 4, 5, 6, 0, 0, 0}, ecoSystem.Population);
         }
 
         [Test]
-        public void TestGetGVetFishCount_At1Duplication()
+        public void TestFishEcoSystem2_EvolveCreatesNewBornAndShiftsBirthingToBirthDelay()
         {
-            Assert.AreEqual(2, _ecoSystem.GetFishCount(3, 4));
+            var ecoSystem = new Day6.FishEcoSystem(2, 7, new long[] {1, 0, 0, 0, 0, 0, 0});
+            ecoSystem.Evolve(1);
+
+            CollectionAssert.AreEqual(new[] {0, 0, 0, 0, 0, 0, 1, 0, 1}, ecoSystem.Population);
         }
 
         [Test]
-        public void TestGetGVetFishCount_After1Duplication()
+        public void TestFishEcoSystem2_EvolveCumulatesNewBirthWithBirthing()
         {
-            Assert.AreEqual(2, _ecoSystem.GetFishCount(5, 7));
+            var ecoSystem = new Day6.FishEcoSystem(2, 7, new long[] {1, 1, 1, 0, 0, 0, 0});
+            ecoSystem.Evolve(3);
+
+            CollectionAssert.AreEqual(new[] {0, 0, 0, 0, 1, 1, 2, 1, 1}, ecoSystem.Population);
         }
 
-        [Test]
-        public void TestGetGVetFishCount_After2Duplications()
-        {
-            Assert.AreEqual(1, _ecoSystem.GetFishCount(5, 5));
-            Assert.AreEqual(2, _ecoSystem.GetFishCount(5, 6));
-            Assert.AreEqual(2, _ecoSystem.GetFishCount(5, 12));
-            Assert.AreEqual(3, _ecoSystem.GetFishCount(5, 13));
-            Assert.AreEqual(3, _ecoSystem.GetFishCount(5, 14));
-            Assert.AreEqual(4, _ecoSystem.GetFishCount(5, 15));
-            Assert.AreEqual(4, _ecoSystem.GetFishCount(5, 16));
-        }
 
         [Test]
         public void TestPart1() {
@@ -46,8 +42,7 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestPart2() {
-            Assert.Fail();
-            // Assert.AreEqual(26984457539, new Day6().ExecutePart2(_sampleLines));
+            Assert.AreEqual(26984457539L, new Day6().ExecutePart2(_sampleLines));
         }
     }
 }

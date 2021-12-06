@@ -7,11 +7,11 @@ using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
     public class Day4 : Exercise {
-        public int ExecutePart1(string[] lines) {
+        public long ExecutePart1(string[] lines) {
             return Bingo.Parse(lines).GetWinningScore();
         }
 
-        public int ExecutePart2(string[] lines) {
+        public long ExecutePart2(string[] lines) {
             return Bingo.Parse(lines).GetLastWinningScore();
         }
 

@@ -6,11 +6,11 @@ using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
     public class Day5 : Exercise {
-        public int ExecutePart1(string[] lines) {
+        public long ExecutePart1(string[] lines) {
             return GetDangerousPointCountForHorizontalAndVertical(lines);
         }
 
-        public int ExecutePart2(string[] lines) {
+        public long ExecutePart2(string[] lines) {
             return GetAllDangerousPointCount(lines);
         }
 
