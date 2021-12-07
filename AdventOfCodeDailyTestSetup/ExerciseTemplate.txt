@@ -5,11 +5,11 @@ using System.Text;
 
 namespace AdventOfCode2021 {
     public class Day{day} : Exercise {
-        public int ExecutePart1(string[] lines) {
+        public long ExecutePart1(string[] lines) {
             return -1;
         }
 
-        public int ExecutePart2(string[] lines) {
+        public long ExecutePart2(string[] lines) {
             return -2;
         }
     }
