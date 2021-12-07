@@ -14,7 +14,7 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestPart2() {
-            new Day7().ExecutePart2(_sampleLines);
+            Assert.AreEqual(168, new Day7().ExecutePart2(_sampleLines));
         }
     }
 }
