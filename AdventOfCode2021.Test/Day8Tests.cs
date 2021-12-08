@@ -32,5 +32,11 @@ namespace AdventOfCode2021.Test {
             Assert.AreEqual(5353, Day8.ResolveDigits(new string[] {"acedgfb", "cdfbe", "gcdfa", "fbcad", "dab", "cefabd", "cdfgeb", "eafb", "cagedb", "ab"},
                                   new [] { "cdfeb", "fcadb", "cdfeb", "cdbaf"}));
         }
+        
+        [Test]
+        public void TestResolveDigitsFirstLine()
+        {
+            Assert.AreEqual(8394, Day8.ResolveLine("be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe"));
+        }
     }
 }
