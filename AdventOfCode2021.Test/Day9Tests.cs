@@ -1,3 +1,4 @@
+using AdventOfCode2021.Utils;
 using NUnit.Framework;
 
 namespace AdventOfCode2021.Test {
@@ -17,8 +18,16 @@ namespace AdventOfCode2021.Test {
         }
 
         [Test]
+        public void TestComputeBasinSize()
+        {
+            var map = Day9.Map.Parse(_sampleLines);
+            var basin = new Day9.Basin(new IntVector2(1, 0));
+            Assert.AreEqual(3, basin.ComputeSize(map));
+        }
+
+        [Test]
         public void TestPart2() {
-            Assert.AreEqual(-20, new Day9().ExecutePart2(_sampleLines));
+            Assert.AreEqual(1134, new Day9().ExecutePart2(_sampleLines));
         }
     }
 }

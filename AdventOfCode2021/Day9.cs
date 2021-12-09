@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
@@ -10,38 +8,32 @@ namespace AdventOfCode2021 {
             Map map = Map.Parse(lines);
             List<IntVector2> lowPoints = map.GetLowPoints().ToList();
 
-            return lowPoints.Sum(x => map.GetHeight(x) + 1);
+            return lowPoints.Sum(x => map[x] + 1);
         }
 
         public long ExecutePart2(string[] lines) {
-            return -2;
+            Map map = Map.Parse(lines);
+            List<IntVector2> lowPoints = map.GetLowPoints().ToList();
+
+            return lowPoints.Select(x => new Basin(x).ComputeSize(map))
+                .OrderByDescending(x => x).Take(3)
+                .Aggregate(1, (res, value) => res * value);
         }
 
         public class Map {
             private const int MaxHeight = 10;
-            private int[,] _heights;
+            private readonly int[,] _heights;
             private readonly int _width;
-            private int _height;
+            private readonly int _height;
 
 
-            public Map(int[,] heights, int width, int height) {
+            private Map(int[,] heights, int width, int height) {
                 _heights = heights;
                 _width = width;
                 _height = height;
             }
 
-            public int GetHeight(int x, int y) {
-                // if ((x < 0) || (x >= _width)
-                //             || (y < 0) || (y >= _height)) {
-                //     return MaxHeight;
-                // }
-
-                return _heights[x + 1, y+ 1];
-            }
-
-            public int GetHeight(IntVector2 pos) {
-                return _heights[pos.X + 1, pos.Y+ 1];
-            }
+            public int this[IntVector2 position] => _heights[position.X + 1, position.Y + 1];
 
             public IEnumerable<IntVector2> GetLowPoints() {
                 for (int y = 1; y < _height + 1; y++) {
@@ -80,7 +72,46 @@ namespace AdventOfCode2021 {
 
                 return new Map(map, width, height);
             }
+        }
 
+        public class Basin
+        {
+            private readonly IntVector2 _lowPoint;
+
+            public Basin(IntVector2 lowPoint)
+            {
+                _lowPoint = lowPoint;
+            }
+
+            public int ComputeSize(Map map)
+            {
+                HashSet<IntVector2> allPoints = new HashSet<IntVector2>() {_lowPoint};
+                Queue<IntVector2> points = new Queue<IntVector2>();
+                points.Enqueue(_lowPoint);
+
+                while (points.Count > 0)
+                {
+                    var newPoints = EnumerateNeighbors(points.Dequeue()).Where(p => map[p] < 9)
+                        .Where(x => !allPoints.Contains(x))
+                        .ToList();
+
+                    foreach (var pt in newPoints)
+                    {
+                        allPoints.Add(pt);
+                        points.Enqueue(pt);
+                    }
+                }
+
+                return allPoints.Count;
+            }
+
+            private IEnumerable<IntVector2> EnumerateNeighbors(IntVector2 position)
+            {
+                yield return new IntVector2(position.X - 1, position.Y);
+                yield return new IntVector2(position.X + 1, position.Y);
+                yield return new IntVector2(position.X, position.Y - 1);
+                yield return new IntVector2(position.X, position.Y + 1);
+            }
         }
     }
 }
