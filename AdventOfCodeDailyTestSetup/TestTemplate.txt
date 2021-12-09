@@ -9,12 +9,12 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestPart1() {
-            new Day{day}().ExecutePart1(_sampleLines);
+            Assert.AreEqual(-10, new Day{day}().ExecutePart1(_sampleLines));
         }
 
         [Test]
         public void TestPart2() {
-            new Day{day}().ExecutePart2(_sampleLines);
+            Assert.AreEqual(-20, new Day{day}().ExecutePart2(_sampleLines));
         }
     }
 }
