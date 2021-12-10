@@ -18,24 +18,44 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestParseValidLine() {
-            Assert.AreEqual(Day10.SyntaxStatus.VALID, Day10.Parse("()[]<>{}", out var c));
-            Assert.AreEqual(Day10.SyntaxStatus.VALID, Day10.Parse("([<{}>])", out c));
+            Assert.AreEqual(Day10.SyntaxStatus.VALID, Day10.Parse("()[]<>{}").status);
+            Assert.AreEqual(Day10.SyntaxStatus.VALID, Day10.Parse("([<{}>])").status);
         }
 
         [Test]
         public void TestParseIncompleteLine() {
-            Assert.AreEqual(Day10.SyntaxStatus.INCOMPLETE, Day10.Parse("()[]<>{", out var c));
-            Assert.AreEqual(Day10.SyntaxStatus.INCOMPLETE, Day10.Parse("([<{}>]", out c));
+            Assert.AreEqual(Day10.SyntaxStatus.INCOMPLETE, Day10.Parse("()[]<>{").status);
+            Assert.AreEqual(Day10.SyntaxStatus.INCOMPLETE, Day10.Parse("([<{}>]").status);
         }
 
         [Test]
         public void TestParseCorruptLine() {
-            Assert.AreEqual(Day10.SyntaxStatus.ILLEGAL, Day10.Parse("(])[]<>{}", out var c));
-            Assert.AreEqual(']', c);
-            Assert.AreEqual(Day10.SyntaxStatus.ILLEGAL, Day10.Parse("([<}{}>]}", out c));
-            Assert.AreEqual('}', c);
-            Assert.AreEqual(Day10.SyntaxStatus.ILLEGAL, Day10.Parse(">([<{}>]}", out c));
-            Assert.AreEqual('>', c);
+            Assert.AreEqual((Day10.SyntaxStatus.ILLEGAL, ']'), Day10.Parse("(])[]<>{}"));
+            Assert.AreEqual((Day10.SyntaxStatus.ILLEGAL, '}'), Day10.Parse("([<}{}>]}"));
+            Assert.AreEqual((Day10.SyntaxStatus.ILLEGAL, '>'), Day10.Parse(">([<{}>]}"));
+        }
+
+        [Test]
+        public void TestGetClosingText()
+        {
+            var blocks = Day10.Parse2("<{([{{}}[<[[[<>{}]]]>[]]").blocks;
+            Assert.AreEqual("])}>", Day10.GetClosingText(blocks));
+        }
+
+        [Test]
+        public void TestGetClosingTextScore()
+        {
+            Assert.AreEqual(294, Day10.GetClosingTextScore("])}>"));
+        }
+
+        [Test]
+        public void TestPart2OnSingleLine()
+        {
+            Assert.AreEqual(288957, new Day10().ExecutePart2(new [] {"[({(<(())[]>[[{[]{<()<>>"}));
+            Assert.AreEqual(5566, new Day10().ExecutePart2(new [] {"[(()[<>])]({[<{<<[]>>("}));
+            Assert.AreEqual(1480781, new Day10().ExecutePart2(new [] {"(((({<>}<{<{<>}{[]{[]{}"}));
+            Assert.AreEqual(995444, new Day10().ExecutePart2(new [] {"{<[[]]>}<{[{[{[]{()[[[]"}));
+            Assert.AreEqual(294, new Day10().ExecutePart2(new [] {"<{([{{}}[<[[[<>{}]]]>[]]"}));
         }
 
         [Test]
@@ -45,7 +65,7 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestPart2() {
-            Assert.AreEqual(-20, new Day10().ExecutePart2(_sampleLines));
+            Assert.AreEqual(288957, new Day10().ExecutePart2(_sampleLines));
         }
     }
 }
