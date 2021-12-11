@@ -22,56 +22,31 @@ namespace AdventOfCode2021 {
 
         public class Map {
             private const int MaxHeight = 10;
-            private readonly int[,] _heights;
-            private readonly int _width;
-            private readonly int _height;
+            private readonly Map2D<int> _map;
 
-
-            private Map(int[,] heights, int width, int height) {
-                _heights = heights;
-                _width = width;
-                _height = height;
+            public Map(Map2D<int> map) {
+                _map = map;
             }
 
-            public int this[IntVector2 position] => _heights[position.X + 1, position.Y + 1];
-
+            public int this[IntVector2 position] => _map[position];
+            
             public IEnumerable<IntVector2> GetLowPoints() {
-                for (int y = 1; y < _height + 1; y++) {
-                    for (int x = 1; x < _width + 1; x++) {
-                        int centerHeight = _heights[x, y];
-                        if ((_heights[x - 1, y] > centerHeight)
-                         && (_heights[x + 1, y] > centerHeight)
-                         && (_heights[x, y - 1] > centerHeight)
-                         && (_heights[x, y + 1] > centerHeight)) {
-                            yield return new IntVector2(x - 1, y - 1);
+                for (int y = 0; y < _map.Height; y++) {
+                    for (int x = 0; x < _map.Width; x++) {
+                        int centerHeight = _map[x, y];
+                        if ((_map[x - 1, y] > centerHeight)
+                         && (_map[x + 1, y] > centerHeight)
+                         && (_map[x, y - 1] > centerHeight)
+                         && (_map[x, y + 1] > centerHeight)) {
+                            yield return new IntVector2(x, y);
                         }
                     }
                 }
             }
 
             public static Map Parse(string[] lines) {
-                int width = lines[0].Length;
-                int height = lines.Length;
-
-                int[,] map = new int[width+2, height+2];
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        map[x + 1, y + 1] = lines[y][x] - '0';
-                    }
-                }
-
-                for (int y = 0; y < height; y++) {
-                    map[0, y + 1] = MaxHeight;
-                    map[width + 1, y + 1] = MaxHeight;
-                }
-
-                for (int x = 0; x < width; x++) {
-                    map[x + 1, 0] = MaxHeight;
-                    map[x + 1, height + 1] = MaxHeight;
-                }
-
-                return new Map(map, width, height);
-            }
+                return new Map(Map2D<int>.Parse(lines, x => x, () => MaxHeight));
+            } 
         }
 
         public class Basin
