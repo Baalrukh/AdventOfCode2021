@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace AdventOfCode2021.Utils {
     public static class EnumerableUtils{
@@ -38,5 +39,9 @@ namespace AdventOfCode2021.Utils {
             }
         }
 
+
+        public static int GetCollectionHashCode<T>(this ICollection<T> collection) {
+            return collection.Aggregate(0, (current, element) => (current * 397) ^ element.GetHashCode());
+        }
     }
 }
