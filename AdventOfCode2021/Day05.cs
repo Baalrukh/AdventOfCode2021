@@ -5,7 +5,7 @@ using System.Text;
 using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
-    public class Day5 : Exercise {
+    public class Day05 : Exercise {
         public long ExecutePart1(string[] lines) {
             return GetDangerousPointCountForHorizontalAndVertical(lines);
         }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace AdventOfCode2021 {
-    public class Day6 : Exercise
+    public class Day06 : Exercise
     {
         private const int Part1Duration = 80;
         private const int Part2Duration = 256;

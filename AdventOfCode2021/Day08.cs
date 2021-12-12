@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace AdventOfCode2021 {
-    public class Day8 : Exercise {
+    public class Day08 : Exercise {
         private static readonly int[] UniqueLengths = {2, 3, 4, 7};
 
         public long ExecutePart1(string[] lines) {

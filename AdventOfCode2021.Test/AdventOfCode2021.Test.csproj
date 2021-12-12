@@ -42,15 +42,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Day1Tests.cs" />
-    <Compile Include="Day2Tests.cs" />
-    <Compile Include="Day3Tests.cs" />
-    <Compile Include="Day4Tests.cs" />
-    <Compile Include="Day5Tests.cs" />
-    <Compile Include="Day6Tests.cs" />
-    <Compile Include="Day7Tests.cs" />
-    <Compile Include="Day8Tests.cs" />
-    <Compile Include="Day9Tests.cs" />
+    <Compile Include="Day01Tests.cs" />
+    <Compile Include="Day02Tests.cs" />
+    <Compile Include="Day03Tests.cs" />
+    <Compile Include="Day04Tests.cs" />
+    <Compile Include="Day05Tests.cs" />
+    <Compile Include="Day06Tests.cs" />
+    <Compile Include="Day07Tests.cs" />
+    <Compile Include="Day08Tests.cs" />
+    <Compile Include="Day09Tests.cs" />
     <Compile Include="Day10Tests.cs" />
     <Compile Include="Day11Tests.cs" />
     <Compile Include="Day12Tests.cs" />

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace AdventOfCode2021 {
-    public class Day7 : Exercise {
+    public class Day07 : Exercise {
         public long ExecutePart1(string[] lines)
         {
             return ComputeAlignmentCost(lines, x => x);

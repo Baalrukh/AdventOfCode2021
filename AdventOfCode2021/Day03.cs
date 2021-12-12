@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace AdventOfCode2021 {
-    public class Day3 : Exercise
+    public class Day03 : Exercise
     {
         public long ExecutePart1(string[] lines)
         {

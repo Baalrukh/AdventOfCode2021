@@ -3,7 +3,7 @@ using System.Linq;
 using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
-    public class Day9 : Exercise {
+    public class Day09 : Exercise {
         public long ExecutePart1(string[] lines) {
             Map map = Map.Parse(lines);
             List<IntVector2> lowPoints = map.GetLowPoints().ToList();

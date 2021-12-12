@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace AdventOfCode2021.Test
 {
     [TestFixture]
-    public class Day2Tests
+    public class Day02Tests
     {
         private static readonly string[] _sampleLines = new[]
         {
@@ -19,13 +19,13 @@ namespace AdventOfCode2021.Test
         [Test]
         public void TestBaseSample()
         {
-            Assert.AreEqual(new IntVector2(15, 10), Day2.GetFinalPosition(_sampleLines));
+            Assert.AreEqual(new IntVector2(15, 10), Day02.GetFinalPosition(_sampleLines));
         }
 
         [Test]
         public void TestAdvancedSample()
         {
-            Assert.AreEqual(new IntVector2(15, 60), Day2.GetFinalPositionAdvanced(_sampleLines));
+            Assert.AreEqual(new IntVector2(15, 60), Day02.GetFinalPositionAdvanced(_sampleLines));
         }
     }
 }

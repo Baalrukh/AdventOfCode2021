@@ -3,7 +3,7 @@
 namespace AdventOfCode2021.Test
 {
     [TestFixture]
-    public class Day1Tests
+    public class Day01Tests
     {
          private static readonly string[] _sampleLines = new[]
             {
@@ -22,13 +22,13 @@ namespace AdventOfCode2021.Test
         [Test]
         public void TestBaseSample()
         {
-            Assert.AreEqual(7, new Day1().ExecutePart1(_sampleLines));
+            Assert.AreEqual(7, new Day01().ExecutePart1(_sampleLines));
         }
 
         [Test]
         public void TestAdvancedSample()
         {
-            Assert.AreEqual(5, new Day1().ExecutePart2(_sampleLines));
+            Assert.AreEqual(5, new Day01().ExecutePart2(_sampleLines));
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Text;
 using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
-    public class Day4 : Exercise {
+    public class Day04 : Exercise {
         public long ExecutePart1(string[] lines) {
             return Bingo.Parse(lines).GetWinningScore();
         }

@@ -14,7 +14,7 @@ namespace AdventOfCodeDailyTestSetup {
                 return;
             }
 
-            var referenceType = typeof(Day1);
+            var referenceType = typeof(Day01);
             int day = FindLastDay(referenceType) + 1;
 
             string clipboard = Clipboard.GetText();

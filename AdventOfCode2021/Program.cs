@@ -9,7 +9,7 @@ namespace AdventOfCode2021
     {
         public static void Main(string[] args)
         {
-            var referenceType = typeof(Day1);
+            var referenceType = typeof(Day01);
             int currentDay = FindLastDay(referenceType);
 
             Console.WriteLine("Running Day" + currentDay);

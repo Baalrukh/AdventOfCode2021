@@ -4,7 +4,7 @@ using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021
 {
-    public class Day2 : Exercise
+    public class Day02 : Exercise
     {
         private delegate IntVector2 PositionCommand(IntVector2 state, int value);
         private delegate SubmarineState SubmarineCommand(SubmarineState state, int value);

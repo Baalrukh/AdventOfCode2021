@@ -2,7 +2,7 @@ using NUnit.Framework;
 
 namespace AdventOfCode2021.Test {
     [TestFixture]
-    public class Day8Tests {
+    public class Day08Tests {
         private static readonly string[] _sampleLines = new[] {
             "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe",
             "edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc",
@@ -18,25 +18,25 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestPart1() {
-            Assert.AreEqual(26, new Day8().ExecutePart1(_sampleLines));
+            Assert.AreEqual(26, new Day08().ExecutePart1(_sampleLines));
         }
 
         [Test]
         public void TestPart2() {
-            Assert.AreEqual(61229, new Day8().ExecutePart2(_sampleLines));
+            Assert.AreEqual(61229, new Day08().ExecutePart2(_sampleLines));
         }
 
         [Test]
         public void TestResolveDigits()
         {
-            Assert.AreEqual(5353, Day8.ResolveDigits(new string[] {"acedgfb", "cdfbe", "gcdfa", "fbcad", "dab", "cefabd", "cdfgeb", "eafb", "cagedb", "ab"},
+            Assert.AreEqual(5353, Day08.ResolveDigits(new string[] {"acedgfb", "cdfbe", "gcdfa", "fbcad", "dab", "cefabd", "cdfgeb", "eafb", "cagedb", "ab"},
                                   new [] { "cdfeb", "fcadb", "cdfeb", "cdbaf"}));
         }
         
         [Test]
         public void TestResolveDigitsFirstLine()
         {
-            Assert.AreEqual(8394, Day8.ResolveLine("be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe"));
+            Assert.AreEqual(8394, Day08.ResolveLine("be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe"));
         }
     }
 }
