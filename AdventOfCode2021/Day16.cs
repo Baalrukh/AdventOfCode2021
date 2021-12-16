@@ -29,19 +29,9 @@ namespace AdventOfCode2021 {
 
             PacketReader packetReader = new PacketReader(binStream);
             Packet packet = packetReader.ReadPacket();
-            // Console.WriteLine(packet.Accept(new PrintVisitor()));
             
             return packet.GetValue();
         }
-        //
-        // public static string ToBinString(byte value) {
-        //     StringBuilder builder = new StringBuilder(4);
-        //     for (int i = 3; i >= 0; i--) {
-        //         builder.Append((value & (1 << i)) == 0 ? '0' : '1');
-        //     }
-        //
-        //     return builder.ToString();
-        // }
         
         public interface HalfByteStream {
             bool CanRead();
@@ -94,10 +84,6 @@ namespace AdventOfCode2021 {
                     
                     if (_remainingBits >= bitCount) {
                         result <<= bitCount;
-                        // uint b = (uint)(_byte >> (_remainingBits - bitCount));
-                        // b = (uint)(b & ((1 << bitCount) - 1));
-                        //
-                        // result = result | b;
                         result = (uint)(result | (uint)(_byte >> (_remainingBits - bitCount)) & ((1 << bitCount) - 1));
                         _remainingBits -= bitCount;
                         Position += bitCount;
