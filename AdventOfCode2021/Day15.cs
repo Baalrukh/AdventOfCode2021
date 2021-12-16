@@ -45,7 +45,35 @@ namespace AdventOfCode2021 {
         }
 
         public long ExecutePart2(string[] lines) {
-            return 0;
+            Map2D<Cell> partialMap = Map2D<Cell>.Parse(lines, x => new Cell(x, int.MaxValue), () => new Cell(0, -1));
+
+            Map2D<Cell> map = Map2D<Cell>.Create(partialMap.Width * 5, partialMap.Height * 5,
+                                                 pos => GetValue(pos, partialMap), () => new Cell(0, -1));
+
+            // for (int y = 0; y < map.Height; y++) {
+            //     for (int x = 0; x < map.Width; x++) {
+            //         Console.Write(map[x, y].Value);
+            //     }
+            //     Console.WriteLine();
+            // }
+
+            map[0, 0].BestTravelCost = 0;
+
+            return FindBestCost(map);
+        }
+
+        private Cell GetValue(IntVector2 pos, Map2D<Cell> partialMap) {
+            int xRepeat = pos.X / partialMap.Width;
+            int yRepeat = pos.Y / partialMap.Height;
+            int x = pos.X % partialMap.Width;
+            int y = pos.Y % partialMap.Height;
+
+            int cost = partialMap[x, y].Value + xRepeat + yRepeat;
+            if (cost > 9) {
+                cost -= 9;
+            }
+
+            return new Cell(cost, int.MaxValue);
         }
 
 

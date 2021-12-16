@@ -8,7 +8,7 @@ namespace AdventOfCode2021.Utils {
         public readonly int Height;
 
 
-        public Map2D(T[,] values, int width, int height) {
+        private Map2D(T[,] values, int width, int height) {
             _values = values;
             Width = width;
             Height = height;
@@ -31,6 +31,31 @@ namespace AdventOfCode2021.Utils {
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static Map2D<T> Create(int width, int height, Func<IntVector2, T> elementFactory, Func<T> borderValueFactory) {
+            var map = new T[width+2, height+2];
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    map[x + 1, y + 1] = elementFactory(new IntVector2(x, y));
+                }
+            }
+
+            for (int y = 0; y < height; y++) {
+                map[0, y + 1] = borderValueFactory();
+                map[width + 1, y + 1] = borderValueFactory();
+            }
+
+            for (int x = 0; x < width; x++) {
+                map[x + 1, 0] = borderValueFactory();
+                map[x + 1, height + 1] = borderValueFactory();
+            }
+            map[0, 0] = borderValueFactory();
+            map[width + 1, 0] = borderValueFactory();
+            map[width + 1, height + 1] = borderValueFactory();
+            map[0, height + 1] = borderValueFactory();
+
+            return new Map2D<T>(map, width, height);
         }
 
         public static Map2D<T> Parse<T>(string[] lines, Func<int, T> elementFactory, Func<T> borderValueFactory) {
