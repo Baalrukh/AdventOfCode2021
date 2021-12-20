@@ -6,25 +6,28 @@ namespace AdventOfCode2021 {
     public class Day20 : Exercise {
         public long ExecutePart1(string[] lines) {
             const int iterationCount = 2;
+            return CountLitElementsAfterNIterations(lines, iterationCount);
+        }
+
+        private long CountLitElementsAfterNIterations(string[] lines, int iterationCount) {
             var zoomMapping = lines[0].Select(x => x == '#' ? 1 : 0).ToList();
 
             var map = Map2D<byte>.Parse(lines.Skip(2).ToArray(), c => (c + '0') == '#' ? 1 : 0, () => 0);
 
-            int margin = 10;
+            int margin = iterationCount * 2;
             var map2 = Map2D<int>.Create(map.Width + margin * 2, map.Height + margin * 2, p => 0, () => 0);
 
             map.CopyTo(map2, margin, margin);
             map = map2;
 
-            PlotMap(map);
+            // PlotMap(map);
 
             for (int i = 0; i < iterationCount; i++) {
+                Console.WriteLine("Iteration " + i);
                 var newMap = Map2D<int>.Create(map.Width, map.Height, p => 0, () => 0);
 
-                for (int y = 0; y < map.Height; y++)
-                {
-                    for (int x = 0; x < map.Width; x++)
-                    {
+                for (int y = 0; y < map.Height; y++) {
+                    for (int x = 0; x < map.Width; x++) {
                         int value = GetAreaValue(map, x, y);
                         var newPixel = zoomMapping[value];
                         newMap[x, y] = newPixel;
@@ -33,7 +36,7 @@ namespace AdventOfCode2021 {
 
                 map = newMap;
 
-                PlotMap(map);
+                // PlotMap(map);
             }
 
             int count = 0;
@@ -42,10 +45,8 @@ namespace AdventOfCode2021 {
             int minY = margin - iterationCount;
             int maxY = map.Height - margin + iterationCount;
             for (int y = minY; y < maxY; y++) {
-                for (int x = minX; x < maxX; x++)
-                {
-                    if (map[x, y] == 1)
-                    {
+                for (int x = minX; x < maxX; x++) {
+                    if (map[x, y] == 1) {
                         count++;
                     }
                 }
@@ -88,7 +89,8 @@ namespace AdventOfCode2021 {
         }
 
         public long ExecutePart2(string[] lines) {
-            return -2;
+            const int iterationCount = 50;
+            return CountLitElementsAfterNIterations(lines, iterationCount);
         }
     }
 }
