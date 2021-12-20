@@ -14,30 +14,91 @@ namespace AdventOfCode2021 {
             var referentialTransforms = new Dictionary<(int source, int destination), ReferentialTransform>();
 
             for (int i = 0; i < scanners.Count; i++) {
-                for (int j = 1; j < scanners.Count; j++) {
-                    ReferentialTransform transformAndTranslation =
-                        VectorTransforms.Select(t => GetTransformAndTranslation(t, beaconsDistancesByScanner, j, i))
-                                        .FirstOrDefault(x => x != null);
-
-                    if (transformAndTranslation != null) {
-                        referentialTransforms.Add((j, i), transformAndTranslation);
+                for (int j = 0; j < scanners.Count; j++) {
+                    if (i == j)
+                    {
+                        continue;
                     }
+
+                    AxisTransform axisTransform = VectorTransforms.FirstOrDefault(t =>
+                        IsTransformBetweenReferentials(t, beaconsDistancesByScanner[j], beaconsDistancesByScanner[i]));
+                    var allMatchingAxisTransforms = VectorTransforms.Where(t =>
+                        IsTransformBetweenReferentials(t, beaconsDistancesByScanner[j], beaconsDistancesByScanner[i])).ToList();
+
+                    if (allMatchingAxisTransforms.Count >= 1)
+                    {
+                        var translation = allMatchingAxisTransforms.Select(x => FindTranslation(scanners[j].Beacons, scanners[i].Beacons,
+                            beaconsDistancesByScanner[j], beaconsDistancesByScanner[i], x)).FirstOrDefault(x => x.HasValue);
+                        if (translation.HasValue)
+                        {
+                            referentialTransforms.Add((j, i), new ReferentialTransform(axisTransform, translation.Value));
+                        }
+                    }
+
+                    // if (axisTransform != null) {
+                    //     IntVector3? translation = FindTranslation(scanners[j].Beacons, scanners[i].Beacons,
+                    //         beaconsDistancesByScanner[j], beaconsDistancesByScanner[i], axisTransform);
+                    //
+                    //
+                    //     referentialTransforms.Add((j, i), new ReferentialTransform(axisTransform, translation));
+                    // }
                 }
             }
 
-            for (int i = 1; i < scanners.Count; i++) {
-                if (referentialTransforms.TryGetValue((i, 0), out var vectorTransform)) {
-                    scanners[i].TransformToScanner0 = vectorTransform;
-                }
-                if (referentialTransforms.TryGetValue((i, 1), out vectorTransform)) {
-                    scanners[i].TransformToScanner1 = vectorTransform;
-                }
+            foreach (var pair in referentialTransforms.Keys.OrderBy(x => x.source))
+            {
+                Console.WriteLine($"{pair.source} -> {pair.destination}");
             }
 
-            var allBeaconsInRef0 = scanners.Take(2).SelectMany(x => TransformAllBeaconsPositions(x, scanners)).Distinct().ToList();
+            var allBeaconsInRef0 = scanners.SelectMany(x => TransformAllBeaconsPositions2(x, scanners, referentialTransforms)).Distinct().ToList();
+            // allBeaconsInRef0.Sort(Vector3Comparer);
 
+            return allBeaconsInRef0.Count;
+        }
 
-            return -1;
+        private int Vector3Comparer(IntVector3 a, IntVector3 b)
+        {
+            var xCompare = a.X.CompareTo(b.X);
+            if (xCompare != 0)
+            {
+                return xCompare;
+            }
+            var yCompare = a.Y.CompareTo(b.Y);
+            if (yCompare != 0)
+            {
+                return yCompare;
+            }
+            return a.Z.CompareTo(b.Z);
+        }
+
+        private IntVector3? FindTranslation(IReadOnlyList<Beacon> srcBeacons, IReadOnlyList<Beacon> dstBeacons,
+            List<BeaconsDistance> srcDistances, List<BeaconsDistance> dstDistances, AxisTransform axisTransform)
+        {
+            BeaconDistanceComparer comparer = new BeaconDistanceComparer(axisTransform);
+
+            var dictionary = srcDistances.Select(d => (d, dstDistances.Where(x => comparer.Equals(x, d)).ToList()))
+                .Where(x => x.Item2.Any())
+                .ToDictionary(x => x.d, x => x.Item2);
+            var keyValuePair = dictionary.OrderBy(x => x.Value.Count()).First();
+            var srcDistance = keyValuePair.Key;
+            var dstDistance = keyValuePair.Value[0];
+
+            var offset1 = dstBeacons[dstDistance.Beacon1].LocalPosition - axisTransform.Transform(srcBeacons[srcDistance.Beacon1].LocalPosition);
+            var offset2 = dstBeacons[dstDistance.Beacon2].LocalPosition - axisTransform.Transform(srcBeacons[srcDistance.Beacon1].LocalPosition);
+
+            var beacons = dictionary.Keys.SelectMany(x => new [] {srcBeacons[x.Beacon1], srcBeacons[x.Beacon2]}).Distinct().ToList();
+            var hasCorrespondingBeacon1 = beacons.Select(x => axisTransform.Transform(x.LocalPosition) + offset1).All(x => dstBeacons.Any(dst => dst.LocalPosition == x));
+            if (hasCorrespondingBeacon1)
+            {
+                return offset1;
+            }
+            var hasCorrespondingBeacon2 = beacons.Select(x => axisTransform.Transform(x.LocalPosition) + offset2).All(x => dstBeacons.Any(dst => dst.LocalPosition == x));
+            if (!hasCorrespondingBeacon2)
+            {
+                return null;
+            }
+
+            return offset2;
         }
 
         public class ReferentialTransform {
@@ -54,10 +115,67 @@ namespace AdventOfCode2021 {
             }
         }
 
-        private ReferentialTransform GetTransformAndTranslation(AxisTransform t, List<List<BeaconsDistance>> beaconsDistancesByScanner, int j, int i) {
-            IntVector3? translation = IsTransformBetweenReferentials(t, beaconsDistancesByScanner[j], beaconsDistancesByScanner[i]);
-            if (translation.HasValue) {
-                return new ReferentialTransform(t, translation.Value);
+        // private ReferentialTransform GetTransformAndTranslation(AxisTransform t, List<List<BeaconsDistance>> beaconsDistancesByScanner, int j, int i) {
+        //     bool = IsTransformBetweenReferentials(t, beaconsDistancesByScanner[j], beaconsDistancesByScanner[i]);
+        //     if (translation.HasValue) {
+        //         return new ReferentialTransform(t, translation.Value);
+        //     }
+        //
+        //     return null;
+        // }
+
+        private IEnumerable<IntVector3> TransformAllBeaconsPositions2(Scanner scanner, List<Scanner> scanners,
+            Dictionary<(int source, int destination), ReferentialTransform> referentialTransforms) {
+
+            if (scanner.Id == 0)
+            {
+                return scanner.Beacons.Select(x => x.LocalPosition);
+            }
+
+            List<ReferentialTransform> transforms = FindTransformsTo0(scanner.Id, referentialTransforms, new List<int>());
+            if (transforms == null)
+            {
+                Console.WriteLine($"No path from {scanner.Id} to 0");
+                return new IntVector3[0];
+            }
+
+            return scanner.Beacons.Select(x => transforms.Aggregate(x.LocalPosition, (res, transform) => transform.Transform(res)));
+
+            // if ((scanner.TransformToScanner0 == null) && (scanner.TransformToScanner1 == null)) {
+            //     return scanner.Beacons.Select(x => x.LocalPosition);
+            // }
+            //
+            // if (scanner.TransformToScanner0 != null) {
+            //     return scanner.Beacons.Select(x => scanner.TransformToScanner0.Transform(x.LocalPosition));
+            // }
+            //
+            // Scanner scanner1 = scanners[1];
+            // return scanner.Beacons.Select(x =>
+            //     scanner1.TransformToScanner0.Transform(scanner.TransformToScanner1.Transform(x.LocalPosition)));
+        }
+
+        private List<ReferentialTransform> FindTransformsTo0(int scannerId,
+            Dictionary<(int source, int destination), ReferentialTransform> referentialTransforms, List<int> visitedScanners)
+        {
+            if (referentialTransforms.TryGetValue((scannerId, 0), out var transform))
+            {
+                return new List<ReferentialTransform>() {transform};
+            }
+
+            foreach (var transition in referentialTransforms.Keys.Where(x => x.source == scannerId))
+            {
+                if (visitedScanners.Contains(transition.destination))
+                {
+                    continue;
+                }
+                visitedScanners.Add(scannerId);
+                var transforms = FindTransformsTo0(transition.destination, referentialTransforms, visitedScanners);
+                if (transforms != null)
+                {
+                    transforms.Insert(0, referentialTransforms[transition]);
+                    return transforms;
+                }
+                visitedScanners.RemoveAt(visitedScanners.Count - 1);
             }
 
             return null;
@@ -77,19 +195,12 @@ namespace AdventOfCode2021 {
                 scanner1.TransformToScanner0.Transform(scanner.TransformToScanner1.Transform(x.LocalPosition)));
         }
 
-        private IntVector3? IsTransformBetweenReferentials(AxisTransform axisTransform,
+        private bool IsTransformBetweenReferentials(AxisTransform axisTransform,
             List<BeaconsDistance> beaconsDistances0, List<BeaconsDistance> beaconsDistances1) {
             BeaconDistanceComparer comparer = new BeaconDistanceComparer(axisTransform);
             var matchingOffsets = beaconsDistances0.Intersect(beaconsDistances1, comparer).ToList();
             var matchingBeacons = matchingOffsets.SelectMany(x => new[] { x.Beacon1, x.Beacon2 }).Distinct().ToList();
-            if (matchingBeacons.Count >= 12) {
-                BeaconsDistance beaconsDistance0 = matchingOffsets[0];
-                BeaconsDistance beaconsDistance1 = beaconsDistances1.First(x => comparer.Equals(beaconsDistance0, x));
-                IntVector3 translation = axisTransform.Transform(beaconsDistance1.Offset) - beaconsDistance0.Offset;
-                return translation;
-            }
-
-            return null;
+            return matchingBeacons.Count >= 12;
         }
 
         private static List<BeaconsDistance> GetBeaconsDistances(List<Scanner> scanners, int scannerID) {
@@ -248,7 +359,8 @@ namespace AdventOfCode2021 {
         public const int Y = 2;
         public const int Z = 3;
 
-        public static readonly IReadOnlyList<AxisTransform> VectorTransforms
+        public static readonly IReadOnlyList<AxisTransform> VectorTransforms;
+        public static readonly IReadOnlyList<AxisTransform> VectorTransforms1
             = new[] {
                 new AxisTransform(X, Y, Z),
                 new AxisTransform(X, Z, -Y),
@@ -270,7 +382,7 @@ namespace AdventOfCode2021 {
                 new AxisTransform(-Y, Z, -X),
                 new AxisTransform(-Y, X, Z),
 
-                new AxisTransform(Z, Z, Y),
+                new AxisTransform(Z, X, Y),
                 new AxisTransform(Z, Y, -X),
                 new AxisTransform(Z, -X, -Y),
                 new AxisTransform(Z, -Y, X),
@@ -280,5 +392,47 @@ namespace AdventOfCode2021 {
                 new AxisTransform(-Z, X, -Y),
                 new AxisTransform(-Z, Y, X),
             };
+
+        public static readonly IReadOnlyList<AxisTransform> VectorTransforms2;
+
+        static Day19()
+        {
+            int[][] axisPermutations = new[]
+            {
+                new[] {X, Y, Z},
+                new[] {X, Z, Y},
+                new[] {Y, X, Z},
+                new[] {Y, Z, X},
+                new[] {Z, X, Y},
+                new[] {Z, Y, X},
+            };
+            int[][] signs = new[]
+            {
+                new[] { 1,  1,  1},
+                new[] { 1,  1, -1},
+                new[] { 1, -1,  1},
+                new[] { 1, -1, -1},
+                new[] {-1,  1,  1},
+                new[] {-1,  1, -1},
+                new[] {-1, -1,  1},
+                new[] {-1, -1, -1},
+            };
+
+            List<AxisTransform> axisTransforms = new List<AxisTransform>();
+            for (int i = 0; i < axisPermutations.Length; i++)
+            {
+                for (int j = 0; j < signs.Length; j++)
+                {
+                    axisTransforms.Add(new AxisTransform(axisPermutations[i][0] * signs[j][0],
+                        axisPermutations[i][1] * signs[j][1],
+                        axisPermutations[i][2] * signs[j][2]));
+                }
+            }
+
+            VectorTransforms2 = axisTransforms;
+
+            VectorTransforms = VectorTransforms2;
+        }
+
     }
 }
