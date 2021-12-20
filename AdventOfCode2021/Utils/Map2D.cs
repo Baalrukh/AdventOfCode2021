@@ -33,6 +33,17 @@ namespace AdventOfCode2021.Utils {
             return stringBuilder.ToString();
         }
 
+        public void CopyTo(Map2D<T> other, int startX, int startY) {
+            int endX = Math.Min(Width, other.Width - startX);
+            int endY = Math.Min(Height, other.Height - startY);
+
+            for (int y = 0; y < endY; y++) {
+                for (int x = 0; x < endX; x++) {
+                    other._values[x + startX + 1, y + startY + 1] = _values[x + 1, y + 1];
+                }
+            }
+        }
+        
         public static Map2D<T> Create(int width, int height, Func<IntVector2, T> elementFactory, Func<T> borderValueFactory) {
             var map = new T[width+2, height+2];
             for (int y = 0; y < height; y++) {
