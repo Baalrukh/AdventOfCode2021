@@ -145,7 +145,7 @@ namespace AdventOfCode2021.Test {
 
         [Test]
         public void TestVectorTransform() {
-            IntVector3 result = new Day19.VectorTransform(Day19.Y, -Day19.Z, Day19.X).Transform(new IntVector3(1, 2, 3));
+            IntVector3 result = new Day19.AxisTransform(Day19.Y, -Day19.Z, Day19.X).Transform(new IntVector3(1, 2, 3));
             Assert.AreEqual(new IntVector3(2, -3, 1), result);
         }
         //

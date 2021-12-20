@@ -11,15 +11,16 @@ namespace AdventOfCode2021 {
 
             var beaconsDistancesByScanner = scanners.Select(x => GetBeaconsDistances(scanners, x.Id)).ToList();
 
-            var referentialTransforms = new Dictionary<(int source, int destination), VectorTransform>();
+            var referentialTransforms = new Dictionary<(int source, int destination), ReferentialTransform>();
 
             for (int i = 0; i < scanners.Count; i++) {
                 for (int j = 1; j < scanners.Count; j++) {
-                    VectorTransform vectorTransform = VectorTransforms.FirstOrDefault(t =>
-                        IsTransformBetweenReferentials(t, beaconsDistancesByScanner[j], beaconsDistancesByScanner[i]));
+                    ReferentialTransform transformAndTranslation =
+                        VectorTransforms.Select(t => GetTransformAndTranslation(t, beaconsDistancesByScanner, j, i))
+                                        .FirstOrDefault(x => x != null);
 
-                    if (vectorTransform != null) {
-                        referentialTransforms.Add((j, i), vectorTransform);
+                    if (transformAndTranslation != null) {
+                        referentialTransforms.Add((j, i), transformAndTranslation);
                     }
                 }
             }
@@ -39,6 +40,29 @@ namespace AdventOfCode2021 {
             return -1;
         }
 
+        public class ReferentialTransform {
+            public readonly AxisTransform AxisTransform;
+            public readonly IntVector3 Translation;
+
+            public ReferentialTransform(AxisTransform axisTransform, IntVector3 translation) {
+                AxisTransform = axisTransform;
+                Translation = translation;
+            }
+
+            public IntVector3 Transform(IntVector3 vector3) {
+                return AxisTransform.Transform(vector3) + Translation;
+            }
+        }
+
+        private ReferentialTransform GetTransformAndTranslation(AxisTransform t, List<List<BeaconsDistance>> beaconsDistancesByScanner, int j, int i) {
+            IntVector3? translation = IsTransformBetweenReferentials(t, beaconsDistancesByScanner[j], beaconsDistancesByScanner[i]);
+            if (translation.HasValue) {
+                return new ReferentialTransform(t, translation.Value);
+            }
+
+            return null;
+        }
+
         private IEnumerable<IntVector3> TransformAllBeaconsPositions(Scanner scanner, List<Scanner> scanners) {
             if ((scanner.TransformToScanner0 == null) && (scanner.TransformToScanner1 == null)) {
                 return scanner.Beacons.Select(x => x.LocalPosition);
@@ -53,11 +77,19 @@ namespace AdventOfCode2021 {
                 scanner1.TransformToScanner0.Transform(scanner.TransformToScanner1.Transform(x.LocalPosition)));
         }
 
-        private bool IsTransformBetweenReferentials(VectorTransform vectorTransform,
+        private IntVector3? IsTransformBetweenReferentials(AxisTransform axisTransform,
             List<BeaconsDistance> beaconsDistances0, List<BeaconsDistance> beaconsDistances1) {
-            var matchingOffsets = beaconsDistances0.Intersect(beaconsDistances1, new BeaconDistanceComparer(vectorTransform));
+            BeaconDistanceComparer comparer = new BeaconDistanceComparer(axisTransform);
+            var matchingOffsets = beaconsDistances0.Intersect(beaconsDistances1, comparer).ToList();
             var matchingBeacons = matchingOffsets.SelectMany(x => new[] { x.Beacon1, x.Beacon2 }).Distinct().ToList();
-            return matchingBeacons.Count >= 12;
+            if (matchingBeacons.Count >= 12) {
+                BeaconsDistance beaconsDistance0 = matchingOffsets[0];
+                BeaconsDistance beaconsDistance1 = beaconsDistances1.First(x => comparer.Equals(beaconsDistance0, x));
+                IntVector3 translation = axisTransform.Transform(beaconsDistance1.Offset) - beaconsDistance0.Offset;
+                return translation;
+            }
+
+            return null;
         }
 
         private static List<BeaconsDistance> GetBeaconsDistances(List<Scanner> scanners, int scannerID) {
@@ -103,8 +135,8 @@ namespace AdventOfCode2021 {
         public class Scanner {
             public int Id { get; }
             public readonly IReadOnlyList<Beacon> Beacons;
-            public VectorTransform TransformToScanner0;
-            public VectorTransform TransformToScanner1;
+            public ReferentialTransform TransformToScanner0;
+            public ReferentialTransform TransformToScanner1;
 
             public Scanner(int id, IReadOnlyList<Beacon> beacons) {
                 Id = id;
@@ -137,10 +169,10 @@ namespace AdventOfCode2021 {
         }
 
         public class BeaconDistanceComparer : IEqualityComparer<BeaconsDistance> {
-            private VectorTransform _vectorTransform;
+            private AxisTransform _axisTransform;
 
-            public BeaconDistanceComparer(VectorTransform vectorTransform) {
-                _vectorTransform = vectorTransform;
+            public BeaconDistanceComparer(AxisTransform axisTransform) {
+                _axisTransform = axisTransform;
             }
 
             public bool Equals(BeaconsDistance x, BeaconsDistance y) {
@@ -148,7 +180,7 @@ namespace AdventOfCode2021 {
                     return false;
                 }
 
-                return _vectorTransform.Transform(y.Offset) == x.Offset;
+                return _axisTransform.Transform(y.Offset) == x.Offset;
                 // return VectorTransforms.Any(t => t.Transform(y.Offset) == x.Offset);
             }
 
@@ -157,7 +189,7 @@ namespace AdventOfCode2021 {
             }
         }
 
-        public class VectorTransform {
+        public class AxisTransform {
             private int _xIndex;
             private int _xSign;
             private int _yIndex;
@@ -165,7 +197,7 @@ namespace AdventOfCode2021 {
             private int _zIndex;
             private int _zSign;
 
-            public VectorTransform(int x, int y, int z) {
+            public AxisTransform(int x, int y, int z) {
                 _xIndex = Math.Abs(x) - 1;
                 _xSign = x > 0 ? 1 : -1;
                 _yIndex = Math.Abs(y) - 1;
@@ -216,37 +248,37 @@ namespace AdventOfCode2021 {
         public const int Y = 2;
         public const int Z = 3;
 
-        public static readonly IReadOnlyList<VectorTransform> VectorTransforms
+        public static readonly IReadOnlyList<AxisTransform> VectorTransforms
             = new[] {
-                new VectorTransform(X, Y, Z),
-                new VectorTransform(X, Z, -Y),
-                new VectorTransform(X, -Y, -Z),
-                new VectorTransform(X, -Z, Y),
+                new AxisTransform(X, Y, Z),
+                new AxisTransform(X, Z, -Y),
+                new AxisTransform(X, -Y, -Z),
+                new AxisTransform(X, -Z, Y),
 
-                new VectorTransform(-X, -Y, Z),
-                new VectorTransform(-X, -Z, -Y),
-                new VectorTransform(-X, Y, -Z),
-                new VectorTransform(-X, Z, Y),
+                new AxisTransform(-X, -Y, Z),
+                new AxisTransform(-X, -Z, -Y),
+                new AxisTransform(-X, Y, -Z),
+                new AxisTransform(-X, Z, Y),
 
-                new VectorTransform(Y, Z, X),
-                new VectorTransform(Y, X, -Z),
-                new VectorTransform(Y, -Z, -X),
-                new VectorTransform(Y, -X, Z),
+                new AxisTransform(Y, Z, X),
+                new AxisTransform(Y, X, -Z),
+                new AxisTransform(Y, -Z, -X),
+                new AxisTransform(Y, -X, Z),
 
-                new VectorTransform(-Y, -Z, X),
-                new VectorTransform(-Y, -X, -Z),
-                new VectorTransform(-Y, Z, -X),
-                new VectorTransform(-Y, X, Z),
+                new AxisTransform(-Y, -Z, X),
+                new AxisTransform(-Y, -X, -Z),
+                new AxisTransform(-Y, Z, -X),
+                new AxisTransform(-Y, X, Z),
 
-                new VectorTransform(Z, Z, Y),
-                new VectorTransform(Z, Y, -X),
-                new VectorTransform(Z, -X, -Y),
-                new VectorTransform(Z, -Y, X),
+                new AxisTransform(Z, Z, Y),
+                new AxisTransform(Z, Y, -X),
+                new AxisTransform(Z, -X, -Y),
+                new AxisTransform(Z, -Y, X),
 
-                new VectorTransform(-Z, -X, Y),
-                new VectorTransform(-Z, -Y, -X),
-                new VectorTransform(-Z, X, -Y),
-                new VectorTransform(-Z, Y, X),
+                new AxisTransform(-Z, -X, Y),
+                new AxisTransform(-Z, -Y, -X),
+                new AxisTransform(-Z, X, -Y),
+                new AxisTransform(-Z, Y, X),
             };
     }
 }
