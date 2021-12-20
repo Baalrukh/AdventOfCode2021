@@ -73,6 +73,11 @@ namespace AdventOfCode2021.Utils {
             return new IntVector3(a.X / amount, a.Y / amount, a.Z / amount);
         }
  
+        public static IntVector3 operator -(IntVector3 a)
+        {
+            return new IntVector3(-a.X, -a.Y, -a.Z);
+        }
+
         public static bool operator ==(IntVector3 a, IntVector3 b)
         {
             return (a.X == b.X) && (a.Y == b.Y) && (a.Z == b.Z);

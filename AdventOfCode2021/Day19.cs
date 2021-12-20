@@ -6,6 +6,8 @@ using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
     public class Day19 : Exercise {
+        private IntVector3[] _allScannerPositions;
+
         public long ExecutePart1(string[] lines) {
             return GetAllBeacons(lines).Count;
         }
@@ -19,6 +21,9 @@ namespace AdventOfCode2021 {
 
             var scannersToMatch = new Queue<Scanner>(scanners.Skip(1));
             int failCount = 0;
+
+            _allScannerPositions = new IntVector3[scanners.Count];
+            _allScannerPositions[0] = new IntVector3(0, 0, 0);
 
             while (scannersToMatch.Count > 0) {
                 Scanner scanner = scannersToMatch.Dequeue();
@@ -39,6 +44,7 @@ namespace AdventOfCode2021 {
                     
                     scanner0 = new Scanner(0, mainBeacons);
                     mainBeaconsDistance = GetBeaconsDistances(scanner0);
+                    _allScannerPositions[scanner.Id] = -referentialTransform.Translation;
                     failCount = 0;
                 }
                 else {
@@ -140,12 +146,14 @@ namespace AdventOfCode2021 {
         
 
         public long ExecutePart2(string[] lines) {
-            var allBeacons = GetAllBeacons(lines);
+            if (_allScannerPositions == null) {
+                ExecutePart1(lines);
+            }
 
             int max = 0;
-            for (int i = 0; i < allBeacons.Count; i++) {
-                for (int j = i + 1; j < allBeacons.Count; j++) {
-                    IntVector3 vector = allBeacons[j] - allBeacons[i];
+            for (int i = 0; i < _allScannerPositions.Length; i++) {
+                for (int j = i + 1; j < _allScannerPositions.Length; j++) {
+                    IntVector3 vector = _allScannerPositions[j] - _allScannerPositions[i];
                     int manhattanDist = Math.Abs(vector.X) + Math.Abs(vector.Y) + Math.Abs(vector.Z);
                     if (manhattanDist > max) {
                         max = manhattanDist;
@@ -168,14 +176,6 @@ namespace AdventOfCode2021 {
                 Beacons = beacons;
             }
         }
-        
-        // public class Beacon {
-        //     public IntVector3 LocalPosition;
-        //
-        //     public Beacon(IntVector3 localPosition) {
-        //         LocalPosition = localPosition;
-        //     }
-        // }
 
         public class BeaconsDistance {
             public readonly int ScannerID;
