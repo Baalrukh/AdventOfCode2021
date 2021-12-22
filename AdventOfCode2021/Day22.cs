@@ -11,100 +11,127 @@ namespace AdventOfCode2021 {
 
         public long ExecutePart1(string[] lines)
         {
-            HashSet<IntVector3> onCubes = new HashSet<IntVector3>();
-            foreach (var line in lines)
-            {
-                ApplyLine(line, onCubes);
-            }
+            var cubeOperations = lines.Select(CubeOperation.Parse)
+                .Where(x => x.IsWithin(-50, 50)).ToList();
 
-
-            return onCubes.Count;
+            return LightCubes(cubeOperations);
         }
 
-        private void ApplyLine(string line, HashSet<IntVector3> onCubes)
-        {
-            int substringStart;
-            Func<IntVector3, bool> cubesOperation;
-            if (line.StartsWith("on"))
-            {
-                cubesOperation = onCubes.Add;
-                substringStart = 3;
-            }
-            else
-            {
-                cubesOperation = onCubes.Remove;
-                substringStart = 4;
-            }
-
-            var values = line.Substring(substringStart)
-                .Split(new[] {'x', 'y', 'z', '=', '.', ','}, StringSplitOptions.RemoveEmptyEntries)
-                .Select(int.Parse).ToList();
-
-            if (values.Any(x => (x < Part1MinCoord) || (x > Part1MaxCoord)))
-            {
-                return;
-            }
-
-            for (int z = values[4]; z <= values[5]; z++)
-            {
-                for (int y = values[2]; y <= values[3]; y++)
-                {
-                    for (int x = values[0]; x <= values[1]; x++)
-                    {
-                        cubesOperation(new IntVector3(x, y, z));
-                    }
-                }
-            }
-        }
-
-        public long ExecutePart2(string[] lines)
-        {
+        public long ExecutePart2(string[] lines) {
             var cubeOperations = lines.Select(CubeOperation.Parse).ToList();
+            return LightCubes(cubeOperations);
+        }
+
+        private long LightCubes(List<CubeOperation> cubeOperations) {
+            long onCubes = 0;
+            
             int minZ = cubeOperations.Min(co => co.ZInterval.Start);
             int maxZ = cubeOperations.Max(co => co.ZInterval.End);
-            int minY = cubeOperations.Min(co => co.YInterval.Start);
-            int maxY = cubeOperations.Max(co => co.YInterval.End);
 
-            long onCubes = 0;
+            var zIntervals = cubeOperations.Select(x => x.ZInterval).OrderBy(x => x.Start).ToList();
 
-            for (int z = minZ; z <= maxZ; z++)
-            {
-                if ((z % 100) == 0)
-                {
-                    Console.WriteLine(z);
-                }
+            int z = minZ;
+            while (z <= maxZ) {
+                var operations = cubeOperations.Where(x => x.ZInterval.IsInside(z)).ToList();
 
-                // onCubes += ExecuteOnSlice(z, cubeOperations);
-                var operations = cubeOperations.Where(co => co.ZInterval.IsInside(z)).ToList();
-                if (operations.Count > 0)
-                {
-                    onCubes += ExecuteOnSlice2(z, operations);
-                }
+                var nextIntervalStart = zIntervals.SkipWhile(x => x.Start <= z).Select(x => (int?)x.Start).FirstOrDefault().GetValueOrDefault(int.MaxValue);
+                var currentIntervalEnd = operations.Select(x => x.ZInterval.End).OrderBy(x => x).First();
+
+                int rangeEnd = Math.Min(nextIntervalStart - 1, currentIntervalEnd);
+
+                int bandWidth = rangeEnd - z + 1;
+                // onCubes += ExecuteOnSlice2(z, operations) * bandWidth;
+                onCubes += ExecuteOnZSlice(operations) * bandWidth;
+                z = rangeEnd + 1;
             }
 
             return onCubes;
         }
 
-        private long ExecuteOnSlice2(int z, List<CubeOperation> cubeOperations)
-        {
+        private long ExecuteOnZSlice(List<CubeOperation> cubeOperations) {
+            long onCubes = 0;
+            
             int minY = cubeOperations.Min(co => co.YInterval.Start);
             int maxY = cubeOperations.Max(co => co.YInterval.End);
 
-            long subCount = 0;
-            for (int y = minY; y <= maxY; y++)
-            {
-                var operations = cubeOperations.Where(co => co.YInterval.IsInside(y)).ToList();
-                if (operations.Count > 0)
-                {
-                    HashSet<int> sliceOnCubes = new HashSet<int>();
-                    foreach (var cubeOperation in cubeOperations)
-                    {
-                        cubeOperation.ApplyOnYZ(sliceOnCubes);
-                    }
+            var yIntervals = cubeOperations.Select(x => x.YInterval).OrderBy(x => x.Start).ToList();
 
-                    subCount += sliceOnCubes.Count;
+            int y = minY;
+            while (y <= maxY) {
+                var operations = cubeOperations.Where(x => x.YInterval.IsInside(y)).ToList();
+
+                var nextIntervalStart = yIntervals.SkipWhile(x => x.Start <= y).Select(x => (int?)x.Start).FirstOrDefault().GetValueOrDefault(int.MaxValue);
+                if (operations.Count == 0) {
+                    y = nextIntervalStart;
+                    continue;
+                }
+                var currentIntervalEnd = operations.Select(x => x.YInterval.End).OrderBy(x => x).First();
+
+                int rangeEnd = Math.Min(nextIntervalStart - 1, currentIntervalEnd);
+
+                int bandWidth = rangeEnd - y + 1;
+                onCubes += ExecuteOnYZRow(operations) * bandWidth;
+                y = rangeEnd + 1;
+            }
+
+            return onCubes;
+        }
+
+        private long ExecuteOnYZRow(List<CubeOperation> cubeOperations) {
+            LineIntervals lineIntervals = new LineIntervals();
+            foreach (CubeOperation cubeOperation in cubeOperations) {
+                cubeOperation.ApplyOnYZ(lineIntervals);
+            }
+
+            return lineIntervals.LengthSum;
+        }
+
+
+        private long ExecuteOnSlice2(int z, List<CubeOperation> cubeOperations)
+        {
+            long subCount = 0;
+
+            LineIntervals impactedIntervals = new LineIntervals();
+            foreach (Interval interval in cubeOperations.Select(x => x.YInterval)) {
+                impactedIntervals.Add(interval);
+            }
+
+            foreach (Interval interval in impactedIntervals.Intervals) {
+                for (int y = interval.Start; y <= interval.End; y++)
+                {
+                    var operations = cubeOperations.Where(co => co.YInterval.IsInside(y)).ToList();
+                    if (operations.Count > 0)
+                    {
+                        LineIntervals lineIntervals = new LineIntervals();
+                        foreach (var cubeOperation in operations)
+                        {
+                            cubeOperation.ApplyOnYZ(lineIntervals);
+                        }
+
+                        subCount += lineIntervals.LengthSum;
+                    }
                 }
             }
+
+            //
+            // int minY = cubeOperations.Min(co => co.YInterval.Start);
+            // int maxY = cubeOperations.Max(co => co.YInterval.End);
+            //
+            // long subCount = 0;
+            // for (int y = minY; y <= maxY; y++)
+            // {
+            //     var operations = cubeOperations.Where(co => co.YInterval.IsInside(y)).ToList();
+            //     if (operations.Count > 0)
+            //     {
+            //         LineIntervals lineIntervals = new LineIntervals();
+            //         foreach (var cubeOperation in operations)
+            //         {
+            //             cubeOperation.ApplyOnYZ(lineIntervals);
+            //         }
+            //
+            //         subCount += lineIntervals.LengthSum;
+            //     }
+            // }
 
             return subCount;
         }
@@ -135,6 +162,10 @@ namespace AdventOfCode2021 {
                 ZInterval = new Interval(minZ, maxZ);
             }
 
+            public override string ToString() {
+                return (SetOn ? "ON" : "OFF") + $" {XInterval}{YInterval}{ZInterval}";
+            }
+
             public static CubeOperation Parse(string line)
             {
                 bool setOn = line.StartsWith("on");
@@ -162,7 +193,7 @@ namespace AdventOfCode2021 {
                 }
             }
 
-            public void ApplyOnYZ(HashSet<int> sliceOnCubes)
+            public void ApplyOnYZ(LineIntervals lineIntervals)
             {
                 // if (!ZInterval.IsInside(z) || !YInterval.IsInside(y))
                 // {
@@ -171,23 +202,23 @@ namespace AdventOfCode2021 {
 
                 if (SetOn)
                 {
-                    for (int x = XInterval.Start; x <= XInterval.End; x++)
-                    {
-                        sliceOnCubes.Add(x);
-                    }
+                    lineIntervals.Add(XInterval);
                 }
                 else
                 {
-                    for (int x = XInterval.Start; x <= XInterval.End; x++)
-                    {
-                        sliceOnCubes.Remove(x);
-                    }
+                    lineIntervals.Remove(XInterval);
                 }
                 // Func<int, bool> cubesOperation = SetOn ? (Func<int, bool>)sliceOnCubes.Add : sliceOnCubes.Remove;
                 // for (int x = XInterval.Start; x <= XInterval.End; x++)
                 // {
                 //     cubesOperation(x);
                 // }
+            }
+
+            public bool IsWithin(int min, int max) {
+                return XInterval.IsWithin(min, max)
+                    && YInterval.IsWithin(min, max)
+                    && ZInterval.IsWithin(min, max);
             }
         }
 
@@ -202,6 +233,8 @@ namespace AdventOfCode2021 {
                 End = end;
             }
 
+            public int Length => End - Start + 1;
+
             public bool IsInside(int value)
             {
                 return (Start <= value) && (value <= End);
@@ -211,11 +244,18 @@ namespace AdventOfCode2021 {
             {
                 return $"[{Start}/{End}]";
             }
+
+            public bool IsWithin(int min, int max) {
+                return (Start >= min) && (End <= max);
+            }
         }
 
         public class LineIntervals
         {
-            private List<Interval> _intervals = new List<Interval>();
+            private readonly List<Interval> _intervals = new List<Interval>();
+            public long LengthSum => _intervals.Sum(x => (long)x.Length);
+
+            public IReadOnlyList<Interval> Intervals => _intervals;
 
             public void Add(Interval interval)
             {
@@ -226,7 +266,7 @@ namespace AdventOfCode2021 {
                 }
 
                 var startIndex = _intervals.FindIndex(x => x.End >= interval.Start);
-                var endIndex = _intervals.FindIndex(x => x.Start <= interval.End);
+                var endIndex = _intervals.FindLastIndex(x => x.Start <= interval.End);
 
                 if (startIndex == -1) // after
                 {
@@ -238,19 +278,77 @@ namespace AdventOfCode2021 {
                 }
                 else
                 {
-                    if (startIndex == endIndex)
-                    {
-
+                    if (startIndex == endIndex) {
+                        var newInterval = new Interval(Math.Min(_intervals[startIndex].Start, interval.Start),
+                            Math.Max(_intervals[startIndex].End, interval.End));
+                        _intervals[startIndex] = newInterval;
+                    } else if (endIndex < startIndex) {
+                        _intervals.Insert(startIndex, interval);
+                    } else {
+                        var newInterval = new Interval(Math.Min(_intervals[startIndex].Start, interval.Start),
+                            Math.Max(_intervals[endIndex].End, interval.End));
+                        _intervals[startIndex] = newInterval;
+                        _intervals.RemoveRange(startIndex + 1, endIndex - startIndex);
                     }
-                    var newInterval = new Interval(_intervals[startIndex].Start, _intervals[endIndex].End);
-                    _intervals.RemoveRange(startIndex, endIndex);
-                    _intervals.Insert(startIndex, newInterval);
                 }
             }
 
             public override string ToString()
             {
-                return string.Join(",", _intervals);
+                return string.Join("", _intervals);
+            }
+
+            public void Remove(Interval interval) {
+                if (_intervals.Count == 0)
+                {
+                    return;
+                }
+                var startIndex = _intervals.FindLastIndex(x => x.End < interval.Start);
+                var endIndex = _intervals.FindIndex(x => x.Start > interval.End);
+                if (endIndex == startIndex + 1) { // remove empty block between 2 intervals
+                    return;
+                }
+                if (startIndex == -1) {
+                    if (endIndex == 0) {
+                        return; // block before first one
+                    }
+                }
+                if (endIndex == -1) {
+                    if (startIndex == _intervals.Count - 1) {
+                        return; // block after last one
+                    }
+                    endIndex = _intervals.Count - 1;
+                } else {
+                    endIndex--;
+                }
+                startIndex++;
+                
+                
+                if (startIndex == endIndex) {
+                    Interval existingInterval = _intervals[startIndex];
+                    if (interval.Start <= existingInterval.Start) {
+                        if (interval.End >= existingInterval.End) {
+                            _intervals.RemoveAt(startIndex);
+                        } else {
+                            _intervals[startIndex] = new Interval(interval.End + 1, existingInterval.End);
+                        }
+                    } else if (interval.End >= existingInterval.End) {
+                        _intervals[startIndex] = new Interval(existingInterval.Start, interval.Start - 1);
+                    }
+                    else {
+                        _intervals[startIndex] = new Interval(existingInterval.Start, interval.Start - 1);
+                        _intervals.Insert(startIndex + 1, new Interval(interval.End + 1, existingInterval.End));
+                    }
+                }
+                else {
+                    if (endIndex < startIndex) {
+                        int idsfas = 0;
+                    }
+                    _intervals[startIndex] = new Interval(_intervals[startIndex].Start, interval.Start - 1);
+                    _intervals[endIndex] = new Interval(interval.End + 1, _intervals[endIndex].End);
+                    _intervals.RemoveRange(startIndex + 1, endIndex - startIndex - 1);
+                }
+                
             }
         }
     }

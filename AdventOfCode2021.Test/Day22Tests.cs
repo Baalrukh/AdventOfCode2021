@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 
 namespace AdventOfCode2021.Test {
@@ -28,8 +29,7 @@ namespace AdventOfCode2021.Test {
             "on x=967..23432,y=45373..81175,z=27513..53682",
         };
 
-        private static readonly string[] _sampleLinesPart2 = new[]
-        {
+        private static readonly string[] _sampleLinesPart2 = new[] {
             "on x=-5..47,y=-31..22,z=-19..33",
             "on x=-44..5,y=-27..21,z=-14..35",
             "on x=-49..-1,y=-11..42,z=-10..38",
@@ -98,6 +98,14 @@ namespace AdventOfCode2021.Test {
         }
 
         [Test]
+        public void TestPart2() {
+            // string[] lines = _sampleLines.Take(_sampleLines.Length - 2).ToArray();
+
+            // Assert.AreEqual(590784, new Day22().ExecutePart2(lines));
+            Assert.AreEqual(2758514936282235L, new Day22().ExecutePart2(_sampleLinesPart2));
+        }
+        
+        [Test]
         public void TestLineIntervals_AddWhenEmpty()
         {
             var lineIntervals = new Day22.LineIntervals();
@@ -111,7 +119,7 @@ namespace AdventOfCode2021.Test {
             var lineIntervals = new Day22.LineIntervals();
             lineIntervals.Add(new Day22.Interval(2, 8));
             lineIntervals.Add(new Day22.Interval(-5, -1));
-            Assert.AreEqual("[-5/-1],[2/8]", lineIntervals.ToString());
+            Assert.AreEqual("[-5/-1][2/8]", lineIntervals.ToString());
         }
 
         [Test]
@@ -120,7 +128,7 @@ namespace AdventOfCode2021.Test {
             var lineIntervals = new Day22.LineIntervals();
             lineIntervals.Add(new Day22.Interval(2, 8));
             lineIntervals.Add(new Day22.Interval(10, 11));
-            Assert.AreEqual("[2/8],[10/11]", lineIntervals.ToString());
+            Assert.AreEqual("[2/8][10/11]", lineIntervals.ToString());
         }
 
         [Test]
@@ -152,8 +160,123 @@ namespace AdventOfCode2021.Test {
         }
 
         [Test]
-        public void TestPart2() {
-            Assert.AreEqual(2758514936282235L, new Day22().ExecutePart2(_sampleLinesPart2));
+        public void TestLineIntervals_AddBeween2Intervals()
+        {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(2, 5));
+            lineIntervals.Add(new Day22.Interval(10, 15));
+            lineIntervals.Add(new Day22.Interval(7, 9));
+            Assert.AreEqual("[2/5][7/9][10/15]", lineIntervals.ToString());
         }
+
+        // [Test]
+        // public void TestLineIntervals_AddOver2IntervalsTest()
+        // {
+        //     var lineIntervals = new Day22.LineIntervals();
+        //     lineIntervals.Add(new Day22.Interval(-3, -2));
+        //     lineIntervals.Add(new Day22.Interval(2, 8));
+        //     lineIntervals.Add(new Day22.Interval(20, 21));
+        //     lineIntervals.Add(new Day22.Interval(1, 10));
+        //     Assert.AreEqual("[-3/-2][1/10][20/21]", lineIntervals.ToString());
+        // }
+
+        [Test]
+        public void TestLineIntervals_RemoveLeft() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-3, -1));
+            lineIntervals.Add(new Day22.Interval(2, 10));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(0, 5));
+            Assert.AreEqual("[-3/-1][6/10][20/21]", lineIntervals.ToString());
+        }
+
+        [Test]
+        public void TestLineIntervals_RemoveRight() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-3, -1));
+            lineIntervals.Add(new Day22.Interval(2, 10));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(5, 15));
+            Assert.AreEqual("[-3/-1][2/4][20/21]", lineIntervals.ToString());
+        }
+
+        [Test]
+        public void TestLineIntervals_RemoveEmbracing() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-3, -1));
+            lineIntervals.Add(new Day22.Interval(2, 10));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(1, 15));
+            Assert.AreEqual("[-3/-1][20/21]", lineIntervals.ToString());
+        }
+        
+        [Test]
+        public void TestLineIntervals_RemoveInside() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-3, -1));
+            lineIntervals.Add(new Day22.Interval(2, 10));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(5, 8));
+            Assert.AreEqual("[-3/-1][2/4][9/10][20/21]", lineIntervals.ToString());
+        }
+        
+        [Test]
+        public void TestLineIntervals_RemoveOverlapping() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-3, -1));
+            lineIntervals.Add(new Day22.Interval(2, 10));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(-2, 8));
+            Assert.AreEqual("[-3/-3][9/10][20/21]", lineIntervals.ToString());
+        }
+        
+        [Test]
+        public void TestLineIntervals_RemoveOverlappingAndEmbracing() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-3, -1));
+            lineIntervals.Add(new Day22.Interval(2, 10));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(-2, 20));
+            Assert.AreEqual("[-3/-3][21/21]", lineIntervals.ToString());
+        }
+
+        [Test]
+        public void TestLineIntervals_RemoveEmptyOnLeft() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-20, 26));
+            lineIntervals.Add(new Day22.Interval(28, 29));
+            lineIntervals.Remove(new Day22.Interval(-48, -32));
+            Assert.AreEqual("[-20/26][28/29]", lineIntervals.ToString());
+        }
+
+        [Test]
+        public void TestLineIntervals_RemoveEmptyOnRight() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-20, 26));
+            lineIntervals.Add(new Day22.Interval(28, 29));
+            lineIntervals.Remove(new Day22.Interval(32, 50));
+            Assert.AreEqual("[-20/26][28/29]", lineIntervals.ToString());
+        }
+        
+        [Test]
+        public void TestLineIntervals_RemoveEmptyMiddle() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-20, 26));
+            lineIntervals.Add(new Day22.Interval(40, 50));
+            lineIntervals.Remove(new Day22.Interval(32, 35));
+            Assert.AreEqual("[-20/26][40/50]", lineIntervals.ToString());
+        }
+
+        [Test]
+        public void TestLineIntervals() {
+            var lineIntervals = new Day22.LineIntervals();
+            lineIntervals.Add(new Day22.Interval(-20, 26));
+            lineIntervals.Remove(new Day22.Interval(-48, -32));
+            lineIntervals.Add(new Day22.Interval(20, 21));
+            lineIntervals.Remove(new Day22.Interval(-16, 35));
+            Assert.AreEqual("[-20/-17]", lineIntervals.ToString());
+            
+        }
+        
     }
 }
