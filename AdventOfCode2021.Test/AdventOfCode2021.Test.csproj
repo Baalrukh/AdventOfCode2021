@@ -80,6 +80,7 @@
     <Compile Include="Day18Tests.cs" />
     <Compile Include="Day19Tests.cs" />
     <Compile Include="Day20Tests.cs" />
+    <Compile Include="Day21Tests.cs" />
     <Compile Include="EnumerableUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
