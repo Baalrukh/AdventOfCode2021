@@ -13,7 +13,7 @@ namespace AdventOfCode2021 {
         private static readonly IntVector2[] DIRECTIONS = new[] { UP, RIGHT, DOWN, LEFT };
 
         public long ExecutePart1(string[] lines) {
-            Map2D<Cell> map = Map2D<Cell>.Parse(lines, x => new Cell(x, int.MaxValue), () => new Cell(0, -1));
+            Map2D<Cell> map = Map2D<Cell>.Parse(lines, x => new Cell(x - '0', int.MaxValue), () => new Cell(0, -1));
             map[0, 0].BestTravelCost = 0;
 
             return FindBestCost(map);
@@ -45,7 +45,7 @@ namespace AdventOfCode2021 {
         }
 
         public long ExecutePart2(string[] lines) {
-            Map2D<Cell> partialMap = Map2D<Cell>.Parse(lines, x => new Cell(x, int.MaxValue), () => new Cell(0, -1));
+            Map2D<Cell> partialMap = Map2D<Cell>.Parse(lines, x => new Cell(x - '0', int.MaxValue), () => new Cell(0, -1));
 
             Map2D<Cell> map = Map2D<Cell>.Create(partialMap.Width * 5, partialMap.Height * 5,
                                                  pos => GetValue(pos, partialMap), () => new Cell(0, -1));

@@ -45,7 +45,7 @@ namespace AdventOfCode2021 {
             }
 
             public static Map Parse(string[] lines) {
-                return new Map(Map2D<int>.Parse(lines, x => x, () => MaxHeight));
+                return new Map(Map2D<int>.Parse(lines, x => x - '0', () => MaxHeight));
             } 
         }
 

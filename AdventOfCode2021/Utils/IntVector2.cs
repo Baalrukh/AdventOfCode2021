@@ -1,3 +1,5 @@
+using System;
+
 namespace AdventOfCode2021.Utils
 {
     public struct IntVector2
@@ -10,6 +12,8 @@ namespace AdventOfCode2021.Utils
             X = x;
             Y = y;
         }
+
+        public int ManhattanDistance => Math.Abs(X) + Math.Abs(Y);
 
         public bool Equals(IntVector2 other)
         {

@@ -34,7 +34,7 @@ namespace AdventOfCode2021 {
             }
 
             public static CaveMap Parse(string[] lines) {
-                return new CaveMap(Map2D<Octopus>.Parse(lines, x => new Octopus(x), () => new Octopus(int.MinValue)));
+                return new CaveMap(Map2D<Octopus>.Parse(lines, x => new Octopus(x - '0'), () => new Octopus(int.MinValue)));
             }
 
             public override string ToString() {

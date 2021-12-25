@@ -12,7 +12,7 @@ namespace AdventOfCode2021 {
         private long CountLitElementsAfterNIterations(string[] lines, int iterationCount) {
             var zoomMapping = lines[0].Select(x => x == '#' ? 1 : 0).ToList();
 
-            var map = Map2D<byte>.Parse(lines.Skip(2).ToArray(), c => (c + '0') == '#' ? 1 : 0, () => 0);
+            var map = Map2D<byte>.Parse(lines.Skip(2).ToArray(), c => c == '#' ? 1 : 0, () => 0);
 
             int margin = iterationCount * 2;
             var map2 = Map2D<int>.Create(map.Width + margin * 2, map.Height + margin * 2, p => 0, () => 0);
