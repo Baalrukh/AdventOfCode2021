@@ -136,6 +136,15 @@ namespace AdventOfCode2021 {
                     int dstY = map.IsFree(_homeX, HomeYBack) ? HomeYBack : HomeYFront;
                     yield return new AmphipodMove(Family, Position, new IntVector2(_homeX, dstY));
                 } else {
+                    if (!CanExitHome(map)) {
+                        yield break;
+                    }
+
+                    if (CanGoHomeFromOtherHome(map)) {
+                        int dstY = map.IsFree(_homeX, HomeYBack) ? HomeYBack : HomeYFront;
+                        yield return new AmphipodMove(Family, Position, new IntVector2(_homeX, dstY));
+                    }
+
                     foreach (int x in CorridorXPositions.Where(x => x < Position.X).Reverse()) {
                         if (map.IsFree(x, CorridorY)) {
                             yield return new AmphipodMove(Family, Position, new IntVector2(x, CorridorY));
@@ -151,6 +160,26 @@ namespace AdventOfCode2021 {
                         }
                     }
                 }
+            }
+
+            private bool CanExitHome(AmphipodMap map) {
+                return (Position.Y == HomeYFront)
+                    || map.IsFree(Position.X, CorridorY);
+            }
+
+            private bool CanGoHomeFromOtherHome(AmphipodMap map) {
+                int incr = _homeX > Position.X ? 1 : -1;
+                int x = Position.X + incr;
+                int dstX = _homeX - incr;
+                while (x != dstX) {
+                    if (!map.IsFree(x, CorridorY)) {
+                        return false;
+                    }
+
+                    x += incr;
+                }
+
+                return true;
             }
         }
 
@@ -201,7 +230,16 @@ namespace AdventOfCode2021 {
                 Destination = destination;
             }
 
-            public int Cost => (Destination - Source).ManhattanDistance * TravelCostPerFamily[(int)Family];
+            public int Cost {
+                get {
+                    if ((Source.Y == CorridorY) || (Destination.Y == CorridorY)) {
+                        return (Destination - Source).ManhattanDistance * TravelCostPerFamily[(int)Family];
+                    }
+
+                    return (CorridorY - Destination.Y + CorridorY - Source.Y + Math.Abs(Destination.X - Source.X))
+                          * TravelCostPerFamily[(int)Family];
+                }
+            }
 
             public void Apply(AmphipodMap map, Amphipod amphipod) {
                 char c = (char)(Family + 'A');
@@ -235,5 +273,115 @@ namespace AdventOfCode2021 {
                 return $"{Family}: {Source} -> {Destination}";
             }
         }
+        //
+        // public interface ANode {
+        //
+        // }
+        //
+        // public class AHome {
+        //     public Stack<Amphipod> _amphipods = new Stack<Amphipod>();
+        //     public
+        // }
+        //
+        //
+        // public class ALink {
+        //     public readonly AHome Source;
+        //
+        // }
+        //
+        // public class ANodeMap {
+        //     private const int CorridorPositionCount = 7;
+        //     private int _homeDepth;
+        //     public Amphipod[] CorridorPositions = new Amphipod[CorridorPositionCount];
+        //
+        //     public Stack<Amphipod>[] Homes = new Stack<Amphipod>[4];
+        //
+        //     public int CurrentCost;
+        //
+        //     public IEnumerable<AMove> EnumeratePossibleMoves() {
+        //         for (int i = 0; i < CorridorPositionCount; i++) {
+        //             if (CorridorPositions[i] == null) {
+        //                 continue;
+        //             }
+        //
+        //             AmphipodFamily family = CorridorPositions[i].Family;
+        //             if (IsHomeFreeToEnter(family) && CanReachHome(i,family, out int xDist)) {
+        //                 int cost = (xDist + _homeDepth - Homes[(int)family].Count) * TravelCostPerFamily[(int)family];
+        //                 yield return new AMove((ANodeMapPosition)i, ANodeMapPosition.AHome + (int)family, cost);
+        //             }
+        //         }
+        //
+        //         for (int i = 0; i < 4; i++) {
+        //             if (Homes[i].Count == 0) {
+        //                 continue;
+        //             }
+        //
+        //             Amphipod amphipod = Homes[i].Peek();
+        //             if (!IsHome(Homes[i], (AmphipodFamily)i)) {
+        //
+        //             }
+        //             if ((amphipod.Family != (AmphipodFamily)i)
+        //              && IsHomeFreeToEnter(amphipod.Family)
+        //              && CanReachHomeFromHome(i, amphipod.Family, out int xDist)) {
+        //                 int cost = (xDist + _homeDepth - Homes[(int)family].Count) * TravelCostPerFamily[(int)family];
+        //                 yield return new AMove((ANodeMapPosition)i, ANodeMapPosition.AHome + (int)family, cost);
+        //             }
+        //         }
+        //     }
+        //
+        //     private bool IsHome(Stack<Amphipod> amphipods, AmphipodFamily family) {
+        //
+        //
+        //     }
+        //
+        //     private bool IsHomeFreeToEnter(AmphipodFamily family) {
+        //         return Homes[(int)family].All(x => x.Family == family);
+        //     }
+        //
+        //     private bool CanReachHome(int corridorPosition, AmphipodFamily family, out int xDistance) {
+        //         int destinationIndex = (int)family + (int)ANodeMapPosition.ALeft; // + 0.5
+        //
+        //         if (corridorPosition < destinationIndex)  {
+        //             for (int i = corridorPosition; i < destinationIndex; i++) {
+        //                 if (CorridorPositions[i] != null) {
+        //                     xDistance = 0;
+        //                     return false;
+        //                 }
+        //             }
+        //
+        //             xDistance = (destinationIndex - corridorPosition) * 2 + 1;
+        //         } else if (corridorPosition > destinationIndex + 1) {
+        //             for (int i = corridorPosition; i > destinationIndex + 1; i--) {
+        //                 if (CorridorPositions[i] != null) {
+        //                     xDistance = 0;
+        //                     return false;
+        //                 }
+        //             }
+        //             xDistance = (corridorPosition - destinationIndex) * 2 + 1;
+        //         } else {
+        //             xDistance = 1;
+        //         }
+        //
+        //         return true;
+        //     }
+        // }
+        //
+        // public readonly struct AMove {
+        //     public readonly ANodeMapPosition Source;
+        //     public readonly ANodeMapPosition Destination;
+        //     public readonly int Cost;
+        //
+        //     public AMove(ANodeMapPosition source, ANodeMapPosition destination, int cost) {
+        //         Source = source;
+        //         Destination = destination;
+        //         Cost = cost;
+        //     }
+        // }
+        //
+        // public enum ANodeMapPosition {
+        //     LeftMost,
+        //     ALeft,
+        //     AB, BC, CD, DRight, RightMost, AHome, BHome, CHome, DHome
+        // }
     }
 }
