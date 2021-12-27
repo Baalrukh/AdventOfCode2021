@@ -58,6 +58,30 @@ namespace AdventOfCode2021.Test {
 
             Assert.AreEqual(string.Join("\r\n", expected) + "\r\n", map);
         }
+
+        [Test]
+        public void TestSample_Step58() {
+            Day25.Area area = Day25.Area.Parse(_sampleLines);
+            for (int i = 0; i < 58; i++) {
+                area.Step();
+            }
+
+            string[] expected = {
+                "..>>v>vv..",
+                "..v.>>vv..",
+                "..>>v>>vv.",
+                "..>>>>>vv.",
+                "v......>vv",
+                "v>v....>>v",
+                "vvv.....>>",
+                ">vv......>",
+                ".>v.vv.v..",
+            };
+            string map = area.Plot();
+
+            Assert.AreEqual(string.Join("\r\n", expected) + "\r\n", map);
+        }
+        
         [Test]
         public void TestPart1() {
             Assert.AreEqual(58, new Day25().ExecutePart1(_sampleLines));

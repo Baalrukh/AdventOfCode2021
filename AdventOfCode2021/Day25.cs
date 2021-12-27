@@ -8,15 +8,8 @@ namespace AdventOfCode2021 {
     public class Day25 : Exercise {
         public long ExecutePart1(string[] lines) {
             Area area = Area.Parse(lines);
-            string plot;
 
-            area.Step();
-            plot = area.Plot();
-            area.Step();
-            //
-            plot = area.Plot();
-
-            int i = 0;
+            int i = 1;
             while (area.Step()) {
                 i++;
             }
@@ -69,7 +62,7 @@ namespace AdventOfCode2021 {
                     foreach (SeaCucumber seaCucumber in movingCucumbers) {
                         int nextPosition = (seaCucumber.Position.X + 1) % Width;
                         AllSeaCucumbers.Remove(seaCucumber.Position);
-                        seaCucumber.Position = new IntVector2(nextPosition, seaCucumber.Position.Y);
+                        seaCucumber.Position = new IntVector2(nextPosition, y);
                         AllSeaCucumbers.Add(seaCucumber.Position);
                         if (nextPosition == 0) {
                             seaCucumbers.RemoveAt(seaCucumbers.Count - 1);
@@ -85,10 +78,10 @@ namespace AdventOfCode2021 {
                                                         .Where(s => !AllSeaCucumbers.Contains(new IntVector2(x, (s.Position.Y + 1) % Height)))
                                                         .ToList();
                     foundMove |= movingCucumbers.Count > 0;
-                    foreach (SeaCucumber seaCucumber in seaCucumbers) {
+                    foreach (SeaCucumber seaCucumber in movingCucumbers) {
                         int nextPosition = (seaCucumber.Position.Y + 1) % Height;
                         AllSeaCucumbers.Remove(seaCucumber.Position);
-                        seaCucumber.Position = new IntVector2(seaCucumber.Position.X, nextPosition);
+                        seaCucumber.Position = new IntVector2(x, nextPosition);
                         AllSeaCucumbers.Add(seaCucumber.Position);
                         if (nextPosition == 0) {
                             seaCucumbers.RemoveAt(seaCucumbers.Count - 1);

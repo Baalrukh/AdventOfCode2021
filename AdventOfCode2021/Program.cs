@@ -31,7 +31,7 @@ namespace AdventOfCode2021
 
         private static int FindLastDay(Type referenceType)
         {
-            return Enumerable.Range(1, 24).Last(i => referenceType.Assembly.GetType($"{referenceType.Namespace}.Day{i}") != null);
+            return Enumerable.Range(1, 25).Last(i => referenceType.Assembly.GetType($"{referenceType.Namespace}.Day{i}") != null);
         }
     }
 }
