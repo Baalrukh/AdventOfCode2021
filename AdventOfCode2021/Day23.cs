@@ -1,387 +1,365 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using AdventOfCode2021.Utils;
 
 namespace AdventOfCode2021 {
     public class Day23 : Exercise {
-        private const int HomesXStartPos = 3;
-        private const int HomeYBack = 3;
-        private const int HomeYFront = 2;
-        private const int CorridorY = 1;
-        private static int[] CorridorXPositions = { 1, 2, 4, 6, 8, 10, 11 };
-        private static int[] TravelCostPerFamily = { 1, 10, 100, 1000 };
-
         public long ExecutePart1(string[] lines) {
-            PaddLines(lines);
-            AmphipodMap map = new AmphipodMap(Map2D<char>.Parse(lines, c => c, () => '#'));
+            AWorldState initialWorldState = new AWorldState(ParseHome(lines, 3), ParseHome(lines, 5),
+                                                            ParseHome(lines, 7), ParseHome(lines, 9));
 
-            List<Amphipod> amphipods = Enumerable.Range(0, 4).SelectMany(i => LocateAmphipods(map, i)).ToList();
-
-            int cost = FindMovesToHome(amphipods, map, int.MaxValue / 2);
-            return cost;
-        }
-
-        private void PaddLines(string[] lines) {
-            int lineLength = lines[0].Length;
-            for (int i = 1; i < lines.Length; i++) {
-                while (lines[i].Length < lineLength) {
-                    lines[i] += " ";
-                }
-            }
-        }
-
-        private int FindMovesToHome(List<Amphipod> amphipods, AmphipodMap map, int maxCost) {
-            List<Amphipod> moveableAmphipods = amphipods.Where(x => x.CanMove(map)).ToList();
-            if (moveableAmphipods.Count == 0) {
-                if (amphipods.All(x => x.IsHome(map))) {
-                    return 0;
-                }
-                return int.MaxValue / 2;
-            }
-
-            int bestCost = maxCost;
-            foreach (Amphipod moveableAmphipod in moveableAmphipods) {
-                List<AmphipodMove> moves = moveableAmphipod.EnumerateMoves(map).ToList();
-                foreach (AmphipodMove move in moves) {
-                    if (move.Cost > bestCost) {
-                        continue;
-                    }
-                    move.Apply(map, moveableAmphipod);
-                    int pathCost = FindMovesToHome(amphipods, map, bestCost);
-                    move.UnApply(map, moveableAmphipod);
-
-                    pathCost += move.Cost;
-                    if (pathCost < bestCost) {
-                        bestCost = pathCost;
+            List<AWorldState> queue = initialWorldState.EnumerateMoves().ToList();
+            Dictionary<long, int> scoreByHash = new Dictionary<long, int>();
+            queue.Sort((a, b) => b.Cost.CompareTo(a.Cost));
+            while (!queue[queue.Count - 1].IsFinished()) {
+                AWorldState worldState = queue[queue.Count - 1];
+                queue.RemoveAt(queue.Count - 1);
+                List<AWorldState> aWorldStates = worldState.EnumerateMoves().ToList();
+                foreach (AWorldState state in aWorldStates) {
+                    if (scoreByHash.TryGetValue(state.Hash, out var score)) {
+                        if (state.Cost < score) {
+                            InsertState(queue, state, scoreByHash);
+                        }
+                    } else {
+                        InsertState(queue, state, scoreByHash);
                     }
                 }
             }
 
-            return bestCost;
+            return queue[queue.Count - 1].Cost;
+        }
+
+        private void InsertState(List<AWorldState> queue, AWorldState state, Dictionary<long, int> scoreByHash) {
+            Insert(queue, state);
+            scoreByHash[state.Hash] = state.Cost;
         }
 
 
-        private static IEnumerable<Amphipod> LocateAmphipods(AmphipodMap map2D, int index) {
-            return map2D.Map.EnumeratePositions(c => c == 'A' + index)
-                        .Select(pos => new Amphipod(AmphipodFamily.A + index, pos, HomesXStartPos + 2 * index));
+        private void Insert(List<AWorldState> states, AWorldState newState) {
+            int index = states.FindIndex(x => x.Cost < newState.Cost);
+            if (index == -1) {
+                states.Add(newState);
+            } else {
+                states.Insert(index, newState);
+            }
+        }
+
+        private AmphipodFamily[] ParseHome(string[] lines, int x) {
+            AmphipodFamily[] home = new AmphipodFamily[2];
+            home[0] = lines[2][x] - 'A' + AmphipodFamily.A;
+            home[1] = lines[3][x] - 'A' + AmphipodFamily.A;
+            return home;
         }
 
         public long ExecutePart2(string[] lines) {
             return -2;
         }
 
+
         public enum AmphipodFamily {
-            A, B, C, D
+            None, A, B, C, D
         }
 
-        public class Amphipod {
-            public readonly AmphipodFamily Family;
-            public IntVector2 Position;
-            public char Letter => (char)(Family + 'A');
+        private static readonly IReadOnlyDictionary<AmphipodFamily, int> CostPerFamily =
+            new Dictionary<AmphipodFamily, int>() {
+                { AmphipodFamily.A, 1 },
+                { AmphipodFamily.B, 10 },
+                { AmphipodFamily.C, 100 },
+                { AmphipodFamily.D, 1000 },
+            };
 
-            private readonly int _homeX;
+        public struct AWorldState {
+            private static readonly IReadOnlyDictionary<AmphipodFamily, float> HomeIndices =
+                new Dictionary<AmphipodFamily, float>() {
+                    { AmphipodFamily.A, 1.5f },
+                    { AmphipodFamily.B, 2.5f },
+                    { AmphipodFamily.C, 3.5f },
+                    { AmphipodFamily.D, 4.5f },
+                };
 
-            public Amphipod(AmphipodFamily family, IntVector2 position, int homeX) {
-                Family = family;
-                Position = position;
-                _homeX = homeX;
+            private const int CorridorLength = 7;
+            public readonly AmphipodFamily[] Corridor;
+            public readonly AmphipodFamily[] AHome;
+            public readonly AmphipodFamily[] BHome;
+            public readonly AmphipodFamily[] CHome;
+            public readonly AmphipodFamily[] DHome;
+
+            public readonly int Cost;
+            public long Hash;
+
+            private IEnumerable<AmphipodFamily> AllSlots => Corridor.Concat(AHome).Concat(BHome).Concat(CHome).Concat(DHome);
+
+            public AWorldState(AmphipodFamily[] aHome, AmphipodFamily[] bHome, AmphipodFamily[] cHome, AmphipodFamily[] dHome) {
+                Corridor = new AmphipodFamily[CorridorLength];
+                AHome = aHome;
+                BHome = bHome;
+                CHome = cHome;
+                DHome = dHome;
+                Cost = 0;
+                Hash = 0;
             }
 
-            public bool IsHome(AmphipodMap map) {
-                if (Position.X != _homeX) {
-                    return false;
-                }
-
-                if (Position.Y == HomeYBack) {
-                    return true;
-                }
-                if (Position.Y == HomeYFront) {
-                    return map[Position.X, HomeYBack] == Letter;
-                }
-
-                return false;
+            private AWorldState(AmphipodFamily[] corridor, AmphipodFamily[] aHome, AmphipodFamily[] bHome,
+                                AmphipodFamily[] cHome, AmphipodFamily[] dHome, int cost) {
+                Corridor = corridor;
+                AHome = aHome;
+                BHome = bHome;
+                CHome = cHome;
+                DHome = dHome;
+                Cost = cost;
+                Hash = 0;
             }
 
-            public bool CanMove(AmphipodMap map) {
-                if (IsHome(map)) {
-                    return false;
+            private AWorldState(AWorldState other, int moveCost) {
+                Corridor = CopyArray(other.Corridor);
+                AHome = CopyArray(other.AHome);
+                BHome = CopyArray(other.BHome);
+                CHome = CopyArray(other.CHome);
+                DHome = CopyArray(other.DHome);
+                Cost = other.Cost + moveCost;
+                Hash = 0;
+            }
+
+            private void ComputeHash() {
+                Hash = AllSlots.Aggregate(0L, (res, family) => (res * 7) ^ (int)family);
+            }
+
+            private static AmphipodFamily[] CopyArray(AmphipodFamily[] otherArray) {
+                int size = otherArray.Length;
+                AmphipodFamily[] array = new AmphipodFamily[size];
+                Array.Copy(otherArray, array, size);
+                return array;
+            }
+
+
+            private AmphipodFamily[] GetHome(AmphipodFamily family) {
+                switch (family) {
+                    case AmphipodFamily.A: return AHome;
+                    case AmphipodFamily.B: return BHome;
+                    case AmphipodFamily.C: return CHome;
+                    case AmphipodFamily.D: return DHome;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(family), family, null);
+                }
+            }
+
+            public IEnumerable<AWorldState> EnumerateMoves() {
+                for (int i = 0; i < 7; i++) {
+                    AmphipodFamily amphipod = Corridor[i];
+                    if (amphipod != AmphipodFamily.None) {
+                        float homeIndex = HomeIndices[amphipod];
+                        AmphipodFamily[] home = GetHome(amphipod);
+                        if (IsHomeFree(home, amphipod) && CanGoHomeFromCorridor(i, homeIndex)) {
+                            yield return MoveFromCorridorToHome(amphipod, i, homeIndex);
+                        }
+                    }
                 }
 
-                if (Position.Y == CorridorY) {
-                    return CanGoToHome(map);
+                for (AmphipodFamily sourceHomeFamily = AmphipodFamily.A; sourceHomeFamily <= AmphipodFamily.D; sourceHomeFamily++) {
+                    AmphipodFamily[] sourceHome = GetHome(sourceHomeFamily);
+                    if (IsHomeFinished(sourceHome, sourceHomeFamily)) {
+                        continue;
+                    }
+                    AmphipodFamily amphipod = sourceHome.FirstOrDefault(x => x != AmphipodFamily.None);
+                    if (amphipod == AmphipodFamily.None) {
+                        continue;
+                    }
+
+                    AmphipodFamily[] destinationHome = GetHome(amphipod);
+                    float sourceHomeIndex = HomeIndices[sourceHomeFamily];
+                    if ((amphipod != sourceHomeFamily) && IsHomeFree(destinationHome, amphipod) && CanGoHomeFromHome(sourceHomeIndex, HomeIndices[amphipod])) {
+                        yield return MoveFromHomeToHome(amphipod, sourceHome, sourceHomeFamily, destinationHome);
+                    } else {
+                        for (int i = (int)sourceHomeIndex; i >= 0; i--) {
+                            if (Corridor[i] != AmphipodFamily.None) {
+                                break;
+                            }
+
+                            yield return MoveHomeToCorridor(amphipod, i, sourceHomeFamily);
+                        }
+                        for (int i = (int)sourceHomeIndex + 1; i < CorridorLength; i++) {
+                            if (Corridor[i] != AmphipodFamily.None) {
+                                break;
+                            }
+                            yield return MoveHomeToCorridor(amphipod, i, sourceHomeFamily);
+                        }
+                    }
+                }
+            }
+
+            private AWorldState MoveHomeToCorridor(AmphipodFamily amphipod, int corriodrIndex, AmphipodFamily sourceHome) {
+                float homeIndex = HomeIndices[sourceHome];
+                int cost = GetCostHomeToCorridor(corriodrIndex, homeIndex, amphipod, sourceHome);
+
+                AWorldState worldState = new AWorldState(this, cost);
+                worldState.Corridor[corriodrIndex] = amphipod;
+                AmphipodFamily[] home = worldState.GetHome(sourceHome);
+
+                int index = Array.FindIndex(home, x => x == amphipod);
+                home[index] = AmphipodFamily.None;
+                worldState.ComputeHash();
+                return worldState;
+            }
+
+            private AWorldState MoveFromHomeToHome(AmphipodFamily amphipod, AmphipodFamily[] sourceHome, AmphipodFamily sourceHomeFamily, AmphipodFamily[] destinationHome) {
+                float sourceIndex = HomeIndices[amphipod];
+                float dstIndex = HomeIndices[sourceHomeFamily];
+
+                int src = Array.FindIndex(sourceHome, x => x != AmphipodFamily.None);
+                int dst = Array.FindLastIndex(destinationHome, x => x == AmphipodFamily.None);
+
+                int cost = GetMoveCostHomeToHome(amphipod, src, dst, sourceIndex, dstIndex);
+
+                AWorldState state = new AWorldState(this, cost);
+                state.GetHome(sourceHomeFamily)[src] = AmphipodFamily.None;
+                state.GetHome(amphipod)[dst] = amphipod;
+                state.ComputeHash();
+                return state;
+            }
+
+            public static int GetMoveCostHomeToHome(AmphipodFamily amphipod, int indexInHomeSource,
+                                                     int indexInHomeDest, float sourceIndex, float dstIndex) {
+                int moveCount = (int)Math.Round(Math.Abs(sourceIndex - dstIndex) * 2);
+                moveCount += indexInHomeSource + indexInHomeDest + 2;
+                int cost = moveCount * CostPerFamily[amphipod];
+                return cost;
+            }
+
+
+            private AWorldState MoveFromCorridorToHome(AmphipodFamily family, int index, float homeIndex) {
+                AWorldState worldState = new AWorldState(this, GetCostCorridorToHome(index, homeIndex, family));
+                worldState.Corridor[index] = AmphipodFamily.None;
+
+                AmphipodFamily[] home = worldState.GetHome(family);
+                for (int i = home.Length - 1; i >= 0; i--) {
+                    if (home[i] == AmphipodFamily.None) {
+                        home[i] = family;
+                        break;
+                    }
+                }
+                worldState.ComputeHash();
+
+                return worldState;
+            }
+
+            public int GetCostCorridorToHome(int corridorIndex, float homeIndex, AmphipodFamily family) {
+                int moveCount = 0;
+                if (corridorIndex == 0) {
+                    corridorIndex++;
+                    moveCount++;
+                } else if (corridorIndex == CorridorLength - 1) {
+                    corridorIndex--;
+                    moveCount++;
                 }
 
-                if (Position.Y == HomeYBack) {
-                    if (!map.IsFree(Position.X, HomeYFront)) {
+                moveCount += 2 * (int)Math.Abs(corridorIndex - homeIndex) + 1;
+                AmphipodFamily[] home = GetHome(family);
+                moveCount += home.Count(x => x == AmphipodFamily.None);
+                return moveCount * CostPerFamily[family];
+            }
+
+            public int GetCostHomeToCorridor(int corridorIndex, float homeIndex, AmphipodFamily family, AmphipodFamily sourceHome) {
+                int moveCount = 0;
+                if (corridorIndex == 0) {
+                    corridorIndex++;
+                    moveCount++;
+                } else if (corridorIndex == CorridorLength - 1) {
+                    corridorIndex--;
+                    moveCount++;
+                }
+
+                moveCount += 2 * (int)Math.Abs(corridorIndex - homeIndex) + 1;
+                AmphipodFamily[] home = GetHome(sourceHome);
+                moveCount += home.Count(x => x == AmphipodFamily.None) + 1;
+                return moveCount * CostPerFamily[family];
+            }
+
+            public bool IsHomeFree(AmphipodFamily[] home, AmphipodFamily amphipod) {
+                return home.All(x => (x == AmphipodFamily.None) || (x == amphipod));
+            }
+
+            public bool CanGoHomeFromHome(float sourceHomeIndex, float dstHomeIndex) {
+                if (sourceHomeIndex > dstHomeIndex) {
+                    (dstHomeIndex, sourceHomeIndex) = (sourceHomeIndex, dstHomeIndex);
+                }
+
+                for (int i = (int)Math.Ceiling(sourceHomeIndex); i < dstHomeIndex; i++) {
+                    if (Corridor[i] != AmphipodFamily.None) {
                         return false;
                     }
                 }
-                
-                return map.IsFree(Position.X - 1, CorridorY)
-                    || map.IsFree(Position.X + 1, CorridorY);
+                return true;
             }
 
-            private bool CanGoToHome(AmphipodMap map) {
-                if (!map.IsHomeFree(Family)) {
-                    return false;
-                }
+            public bool CanGoHomeFromCorridor(int index, float homeIndex) {
+                if (homeIndex > index) {
+                    index++;
+                    while (index < homeIndex) {
+                        if (Corridor[index] != AmphipodFamily.None) {
+                            return false;
+                        }
 
-                return map.CanMoveHorizontally(_homeX, Position.X);
-            }
-
-            public IEnumerable<AmphipodMove> EnumerateMoves(AmphipodMap map) {
-                if (Position.Y == CorridorY) {
-                    int dstY = map.IsFree(_homeX, HomeYBack) ? HomeYBack : HomeYFront;
-                    yield return new AmphipodMove(Family, Position, new IntVector2(_homeX, dstY));
+                        index++;
+                    }
                 } else {
-                    if (!CanExitHome(map)) {
-                        yield break;
-                    }
-
-                    if (CanGoHomeFromOtherHome(map)) {
-                        int dstY = map.IsFree(_homeX, HomeYBack) ? HomeYBack : HomeYFront;
-                        yield return new AmphipodMove(Family, Position, new IntVector2(_homeX, dstY));
-                    }
-
-                    foreach (int x in CorridorXPositions.Where(x => x < Position.X).Reverse()) {
-                        if (map.IsFree(x, CorridorY)) {
-                            yield return new AmphipodMove(Family, Position, new IntVector2(x, CorridorY));
-                        } else {
-                            break;
+                    index--;
+                    while (index > homeIndex) {
+                        if (Corridor[index] != AmphipodFamily.None) {
+                            return false;
                         }
+
+                        index--;
                     }
-                    foreach (int x in CorridorXPositions.Where(x => x > Position.X)) {
-                        if (map.IsFree(x, CorridorY)) {
-                            yield return new AmphipodMove(Family, Position, new IntVector2(x, CorridorY));
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            private bool CanExitHome(AmphipodMap map) {
-                return (Position.Y == HomeYFront)
-                    || map.IsFree(Position.X, CorridorY);
-            }
-
-            private bool CanGoHomeFromOtherHome(AmphipodMap map) {
-                int incr = _homeX > Position.X ? 1 : -1;
-                int x = Position.X + incr;
-                int dstX = _homeX - incr;
-                while (x != dstX) {
-                    if (!map.IsFree(x, CorridorY)) {
-                        return false;
-                    }
-
-                    x += incr;
-                }
-
-                return true;
-            }
-        }
-
-        public class AmphipodMap {
-            public readonly Map2D<char> Map;
-
-            public AmphipodMap(Map2D<char> map) {
-                Map = map;
-            }
-
-            public bool IsHomeFree(AmphipodFamily family) {
-                int x = HomesXStartPos + (int)family * 2;
-                return (Map[x, HomeYFront] == '.')
-                    && ((Map[x, HomeYBack] == '.') || (Map[x, HomeYBack] == (char)('A' + family)));
-            }
-
-            public char this[int x, int y] => Map[x, y];
-
-
-            public bool CanMoveHorizontally(int dst, int src) {
-                int deltaX = dst - src;
-                int increment = deltaX > 0 ? 1 : -1;
-                int x = src + increment;
-                while (x != dst) {
-                    if (this[x, CorridorY] != '.') {
-                        return false;
-                    }
-
-                    x += increment;
                 }
 
                 return true;
             }
 
-            public bool IsFree(int x, int y) {
-                return this[x, y] == '.';
-            }
-        }
-
-        public struct AmphipodMove {
-            public readonly AmphipodFamily Family;
-            public readonly IntVector2 Source;
-            public readonly IntVector2 Destination;
-
-            public AmphipodMove(AmphipodFamily family, IntVector2 source, IntVector2 destination) {
-                Family = family;
-                Source = source;
-                Destination = destination;
+            public bool IsFinished() {
+                return AHome.All(x => x == AmphipodFamily.A)
+                    && BHome.All(x => x == AmphipodFamily.B)
+                    && CHome.All(x => x == AmphipodFamily.C)
+                    && DHome.All(x => x == AmphipodFamily.D);
             }
 
-            public int Cost {
-                get {
-                    if ((Source.Y == CorridorY) || (Destination.Y == CorridorY)) {
-                        return (Destination - Source).ManhattanDistance * TravelCostPerFamily[(int)Family];
-                    }
-
-                    return (CorridorY - Destination.Y + CorridorY - Source.Y + Math.Abs(Destination.X - Source.X))
-                          * TravelCostPerFamily[(int)Family];
-                }
+            public static bool IsHomeFinished(AmphipodFamily[] home, AmphipodFamily family) {
+                return home.All(x => x == family);
             }
 
-            public void Apply(AmphipodMap map, Amphipod amphipod) {
-                char c = (char)(Family + 'A');
-                if (map.Map[Source] != c) {
-                    throw new Exception("Inconsistency detected - source");
-                }
-                if (!map.IsFree(Destination.X, Destination.Y)) {
-                    throw new Exception("Inconsistency detected - destination");
-                }
-
-                map.Map[Source] = '.';
-                map.Map[Destination] = c;
-                amphipod.Position = Destination;
+            public static AWorldState Parse(string corridorTxt, string aHomeText, string bHomeText, string cHomeText,
+                                            string dHomeText) {
+                return new AWorldState(ParseArray(corridorTxt),
+                                       ParseArray(aHomeText),
+                                       ParseArray(bHomeText),
+                                       ParseArray(cHomeText),
+                                       ParseArray(dHomeText),
+                                       0);
             }
 
-            public void UnApply(AmphipodMap map, Amphipod amphipod) {
-                char c = (char)(Family + 'A');
-                if (map.Map[Destination] != c) {
-                    throw new Exception("Inconsistency detected - source");
-                }
-                if (!map.IsFree(Source.X, Source.Y)) {
-                    throw new Exception("Inconsistency detected - destination");
-                }
+            private static AmphipodFamily[] ParseArray(string corridorTxt) {
+                return corridorTxt.Select(c => c == ' ' ? AmphipodFamily.None : c - 'A' + AmphipodFamily.A).ToArray();
+            }
 
-                map.Map[Destination] = '.';
-                map.Map[Source] = c;
-                amphipod.Position = Source;
+            private static char GetChar(AmphipodFamily family) {
+                switch (family) {
+                    case AmphipodFamily.None: return ' ';
+                    case AmphipodFamily.A: return 'A';
+                    case AmphipodFamily.B: return 'B';
+                    case AmphipodFamily.C: return 'C';
+                    case AmphipodFamily.D: return 'D';
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(family), family, null);
+                }
             }
 
             public override string ToString() {
-                return $"{Family}: {Source} -> {Destination}";
+                return new string(Corridor.Select(GetChar).ToArray())
+                     + "/" + new string(AHome.Select(GetChar).ToArray())
+                     + "/" + new string(BHome.Select(GetChar).ToArray())
+                     + "/" + new string(CHome.Select(GetChar).ToArray())
+                     + "/" + new string(DHome.Select(GetChar).ToArray())
+                     + "|" + Cost;
             }
         }
-        //
-        // public interface ANode {
-        //
-        // }
-        //
-        // public class AHome {
-        //     public Stack<Amphipod> _amphipods = new Stack<Amphipod>();
-        //     public
-        // }
-        //
-        //
-        // public class ALink {
-        //     public readonly AHome Source;
-        //
-        // }
-        //
-        // public class ANodeMap {
-        //     private const int CorridorPositionCount = 7;
-        //     private int _homeDepth;
-        //     public Amphipod[] CorridorPositions = new Amphipod[CorridorPositionCount];
-        //
-        //     public Stack<Amphipod>[] Homes = new Stack<Amphipod>[4];
-        //
-        //     public int CurrentCost;
-        //
-        //     public IEnumerable<AMove> EnumeratePossibleMoves() {
-        //         for (int i = 0; i < CorridorPositionCount; i++) {
-        //             if (CorridorPositions[i] == null) {
-        //                 continue;
-        //             }
-        //
-        //             AmphipodFamily family = CorridorPositions[i].Family;
-        //             if (IsHomeFreeToEnter(family) && CanReachHome(i,family, out int xDist)) {
-        //                 int cost = (xDist + _homeDepth - Homes[(int)family].Count) * TravelCostPerFamily[(int)family];
-        //                 yield return new AMove((ANodeMapPosition)i, ANodeMapPosition.AHome + (int)family, cost);
-        //             }
-        //         }
-        //
-        //         for (int i = 0; i < 4; i++) {
-        //             if (Homes[i].Count == 0) {
-        //                 continue;
-        //             }
-        //
-        //             Amphipod amphipod = Homes[i].Peek();
-        //             if (!IsHome(Homes[i], (AmphipodFamily)i)) {
-        //
-        //             }
-        //             if ((amphipod.Family != (AmphipodFamily)i)
-        //              && IsHomeFreeToEnter(amphipod.Family)
-        //              && CanReachHomeFromHome(i, amphipod.Family, out int xDist)) {
-        //                 int cost = (xDist + _homeDepth - Homes[(int)family].Count) * TravelCostPerFamily[(int)family];
-        //                 yield return new AMove((ANodeMapPosition)i, ANodeMapPosition.AHome + (int)family, cost);
-        //             }
-        //         }
-        //     }
-        //
-        //     private bool IsHome(Stack<Amphipod> amphipods, AmphipodFamily family) {
-        //
-        //
-        //     }
-        //
-        //     private bool IsHomeFreeToEnter(AmphipodFamily family) {
-        //         return Homes[(int)family].All(x => x.Family == family);
-        //     }
-        //
-        //     private bool CanReachHome(int corridorPosition, AmphipodFamily family, out int xDistance) {
-        //         int destinationIndex = (int)family + (int)ANodeMapPosition.ALeft; // + 0.5
-        //
-        //         if (corridorPosition < destinationIndex)  {
-        //             for (int i = corridorPosition; i < destinationIndex; i++) {
-        //                 if (CorridorPositions[i] != null) {
-        //                     xDistance = 0;
-        //                     return false;
-        //                 }
-        //             }
-        //
-        //             xDistance = (destinationIndex - corridorPosition) * 2 + 1;
-        //         } else if (corridorPosition > destinationIndex + 1) {
-        //             for (int i = corridorPosition; i > destinationIndex + 1; i--) {
-        //                 if (CorridorPositions[i] != null) {
-        //                     xDistance = 0;
-        //                     return false;
-        //                 }
-        //             }
-        //             xDistance = (corridorPosition - destinationIndex) * 2 + 1;
-        //         } else {
-        //             xDistance = 1;
-        //         }
-        //
-        //         return true;
-        //     }
-        // }
-        //
-        // public readonly struct AMove {
-        //     public readonly ANodeMapPosition Source;
-        //     public readonly ANodeMapPosition Destination;
-        //     public readonly int Cost;
-        //
-        //     public AMove(ANodeMapPosition source, ANodeMapPosition destination, int cost) {
-        //         Source = source;
-        //         Destination = destination;
-        //         Cost = cost;
-        //     }
-        // }
-        //
-        // public enum ANodeMapPosition {
-        //     LeftMost,
-        //     ALeft,
-        //     AB, BC, CD, DRight, RightMost, AHome, BHome, CHome, DHome
-        // }
     }
 }
