@@ -8,6 +8,25 @@ namespace AdventOfCode2021 {
             AWorldState initialWorldState = new AWorldState(ParseHome(lines, 3), ParseHome(lines, 5),
                                                             ParseHome(lines, 7), ParseHome(lines, 9));
 
+            return FindBestCost(initialWorldState);
+        }
+
+        public long ExecutePart2(string[] lines) {
+            AWorldState initialWorldState = new AWorldState(ParseHome(lines, 3, 4), ParseHome(lines, 5, 4),
+                                                            ParseHome(lines, 7, 4), ParseHome(lines, 9, 4));
+
+            initialWorldState.AHome[1] = AmphipodFamily.D;
+            initialWorldState.AHome[2] = AmphipodFamily.D;
+            initialWorldState.BHome[1] = AmphipodFamily.C;
+            initialWorldState.BHome[2] = AmphipodFamily.B;
+            initialWorldState.CHome[1] = AmphipodFamily.B;
+            initialWorldState.CHome[2] = AmphipodFamily.A;
+            initialWorldState.DHome[1] = AmphipodFamily.A;
+            initialWorldState.DHome[2] = AmphipodFamily.C;
+            return FindBestCost(initialWorldState);
+        }
+
+        private long FindBestCost(AWorldState initialWorldState) {
             List<AWorldState> queue = initialWorldState.EnumerateMoves().ToList();
             Dictionary<long, int> scoreByHash = new Dictionary<long, int>();
             queue.Sort((a, b) => b.Cost.CompareTo(a.Cost));
@@ -44,17 +63,12 @@ namespace AdventOfCode2021 {
             }
         }
 
-        private AmphipodFamily[] ParseHome(string[] lines, int x) {
-            AmphipodFamily[] home = new AmphipodFamily[2];
+        private AmphipodFamily[] ParseHome(string[] lines, int x, int homeSize = 2) {
+            AmphipodFamily[] home = new AmphipodFamily[homeSize];
             home[0] = lines[2][x] - 'A' + AmphipodFamily.A;
-            home[1] = lines[3][x] - 'A' + AmphipodFamily.A;
+            home[homeSize - 1] = lines[3][x] - 'A' + AmphipodFamily.A;
             return home;
         }
-
-        public long ExecutePart2(string[] lines) {
-            return -2;
-        }
-
 
         public enum AmphipodFamily {
             None, A, B, C, D
